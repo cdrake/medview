@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import glsl from 'vite-plugin-glsl';
 import path from 'path'
 
 export default defineConfig({
@@ -14,5 +15,6 @@ export default defineConfig({
         globals: {} // Add global variables for UMD builds if necessary
       }
     }
-  }
+  },
+  plugins: [glsl()],
 })

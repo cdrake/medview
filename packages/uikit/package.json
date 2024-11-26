@@ -1,11 +1,11 @@
 {
   "name": "@medview/uikit",
   "version": "0.1.0",
-  "main": "dist/uikit.cjs.js", 
-  "module": "dist/uikit.es.js", 
+  "main": "dist/uikit.cjs.js",
+  "module": "dist/uikit.es.js",
   "exports": {
     ".": {
-      "import": "./dist/uikit.es.js", 
+      "import": "./dist/uikit.es.js",
       "require": "./dist/uikit.cjs.js",
       "types": "./dist/index.d.ts"
     }
@@ -21,5 +21,12 @@
   "keywords": [],
   "author": "Chris Drake",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  },
+  "devDependencies": {
+    "vite-plugin-glsl": "^1.3.0"
+  }
 }

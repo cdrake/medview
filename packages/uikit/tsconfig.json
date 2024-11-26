@@ -10,5 +10,5 @@
       "moduleResolution": "node", // Resolve node_modules correctly
       "esModuleInterop": true // Enable compatibility with CommonJS modules
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "types"]
   }
