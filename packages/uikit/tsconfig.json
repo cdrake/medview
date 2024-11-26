@@ -8,7 +8,8 @@
       "target": "ESNext", // Modern JavaScript target
       "strict": true, // Enable strict type checking
       "moduleResolution": "node", // Resolve node_modules correctly
-      "esModuleInterop": true // Enable compatibility with CommonJS modules
+      "esModuleInterop": true, // Enable compatibility with CommonJS modules
+      "resolveJsonModule": true,
     },
     "include": ["src/**/*", "types"]
   }

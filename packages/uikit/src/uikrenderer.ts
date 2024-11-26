@@ -1,5 +1,5 @@
 import { mat4, vec2, vec4 } from 'gl-matrix'
-import { Shader } from './shader.js'
+import { UIKShader } from './uikshader.js'
 import circleVert from './shaders/vert/circle.glsl'
 import circleFrag from './shaders/frag/circle.glsl'
 import colorbarVert from './shaders/vert/colorbar.glsl'
@@ -20,51 +20,51 @@ import rotatedFontFrag from './shaders/frag/rotatedFont.glsl'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
-  private lineShader: Shader
-  protected static circleShader: Shader
-  protected static rectShader: Shader
-  protected static roundedRectShader: Shader
-  protected static triangleShader: Shader
-  protected static rotatedTextShader: Shader
-  protected static colorbarShader: Shader
-  protected static projectedLineShader: Shader
-  protected static ellipticalFillShader: Shader
+  private lineShader: UIKShader
+  protected static circleShader: UIKShader
+  protected static rectShader: UIKShader
+  protected static roundedRectShader: UIKShader
+  protected static triangleShader: UIKShader
+  protected static rotatedTextShader: UIKShader
+  protected static colorbarShader: UIKShader
+  protected static projectedLineShader: UIKShader
+  protected static ellipticalFillShader: UIKShader
   protected static genericVAO: WebGLVertexArrayObject
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl
-    this.lineShader = new Shader(gl, lineVert, lineFrag)
+    this.lineShader = new UIKShader(gl, lineVert, lineFrag)
 
     if (!UIKRenderer.rectShader) {
-      UIKRenderer.rectShader = new Shader(gl, rectVert, rectFrag)
+      UIKRenderer.rectShader = new UIKShader(gl, rectVert, rectFrag)
     }
 
     if (!UIKRenderer.roundedRectShader) {
-      UIKRenderer.roundedRectShader = new Shader(gl, rectVert, roundedRectFrag)
+      UIKRenderer.roundedRectShader = new UIKShader(gl, rectVert, roundedRectFrag)
     }
 
     if (!UIKRenderer.circleShader) {
-      UIKRenderer.circleShader = new Shader(gl, circleVert, circleFrag)
+      UIKRenderer.circleShader = new UIKShader(gl, circleVert, circleFrag)
     }
 
     if (!UIKRenderer.triangleShader) {
-      UIKRenderer.triangleShader = new Shader(gl, triangleVert, triangleFrag)
+      UIKRenderer.triangleShader = new UIKShader(gl, triangleVert, triangleFrag)
     }
 
     if (!UIKRenderer.rotatedTextShader) {
-      UIKRenderer.rotatedTextShader = new Shader(gl, rotatedFontVert, rotatedFontFrag)
+      UIKRenderer.rotatedTextShader = new UIKShader(gl, rotatedFontVert, rotatedFontFrag)
     }
 
     if (!UIKRenderer.colorbarShader) {
-      UIKRenderer.colorbarShader = new Shader(gl, colorbarVert, colorbarFrag)
+      UIKRenderer.colorbarShader = new UIKShader(gl, colorbarVert, colorbarFrag)
     }
 
     if (!UIKRenderer.projectedLineShader) {
-      UIKRenderer.projectedLineShader = new Shader(gl, projectedLineVert, projectedLineFrag)
+      UIKRenderer.projectedLineShader = new UIKShader(gl, projectedLineVert, projectedLineFrag)
     }
 
     if (!UIKRenderer.ellipticalFillShader) {
-      UIKRenderer.ellipticalFillShader = new Shader(gl, ellipseVert, ellipseFrag)
+      UIKRenderer.ellipticalFillShader = new UIKShader(gl, ellipseVert, ellipseFrag)
     }
 
     if (!UIKRenderer.genericVAO) {

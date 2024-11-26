@@ -1,4 +1,4 @@
-import { Log } from '../utilities/log'
+import { Log } from './utilities/log'
 
 // Helper function to compile a shader
 export const compileShader = function (
@@ -62,7 +62,7 @@ export const compileShader = function (
   }
   
 
-export class Shader {
+export class UIKShader {
   program: WebGLProgram
   uniforms: Record<string, WebGLUniformLocation | null> = {}
 
