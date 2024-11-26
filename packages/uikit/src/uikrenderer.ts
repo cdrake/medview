@@ -17,10 +17,11 @@ import triangleVert from './shaders/vert/triangle.glsl'
 import triangleFrag from './shaders/frag/triangle.glsl'
 import rotatedFontVert from './shaders/vert/rotatedFont.glsl'
 import rotatedFontFrag from './shaders/frag/rotatedFont.glsl'
+import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
-  private lineShader: UIKShader
+  protected static lineShader: UIKShader
   protected static circleShader: UIKShader
   protected static rectShader: UIKShader
   protected static roundedRectShader: UIKShader
@@ -30,10 +31,14 @@ export class UIKRenderer {
   protected static projectedLineShader: UIKShader
   protected static ellipticalFillShader: UIKShader
   protected static genericVAO: WebGLVertexArrayObject
+  protected static triangleVertexBuffer: WebGLBuffer
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl
-    this.lineShader = new UIKShader(gl, lineVert, lineFrag)
+    
+    if(!UIKRenderer.lineShader) {
+      UIKRenderer.lineShader = new UIKShader(gl, lineVert, lineFrag)
+    }
 
     if (!UIKRenderer.rectShader) {
       UIKRenderer.rectShader = new UIKShader(gl, rectVert, rectFrag)
@@ -87,5 +92,306 @@ export class UIKRenderer {
 
       UIKRenderer.genericVAO = vao
     }
+
+    if (!UIKRenderer.triangleVertexBuffer) {
+      // Create a static vertex buffer
+      UIKRenderer.triangleVertexBuffer = this.gl.createBuffer() as WebGLBuffer
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, UIKRenderer.triangleVertexBuffer)
+
+      // Allocate space for 3 vertices (triangle), each with 2 components (x, y)
+      const initialVertices = new Float32Array(6)
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, initialVertices, this.gl.DYNAMIC_DRAW)
+    }
+  }
+
+  /**
+   * Draws a triangle.
+   * @param params - Object containing the triangle parameters.
+   * @param params.headPoint - The coordinates of the triangle's head (top vertex).
+   * @param params.baseMidPoint - The midpoint of the triangle's base.
+   * @param params.baseLength - The length of the triangle's base.
+   * @param params.color - The color of the triangle.
+   * @param params.z - The z-coordinate of the triangle. Defaults to 0.
+   */
+  public drawTriangle({
+    headPoint,
+    baseMidPoint,
+    baseLength,
+    color,
+    z = 0
+  }: {
+    headPoint: Vec2
+    baseMidPoint: Vec2
+    baseLength: number
+    color: Color
+    z?: number
+  }): void {
+    const canvas = this.gl.canvas as HTMLCanvasElement
+
+    // Convert screen points to WebGL coordinates
+    const hp = Array.isArray(headPoint) ? headPoint : [headPoint[0], headPoint[1]]
+    const bmp = Array.isArray(baseMidPoint) ? baseMidPoint : [baseMidPoint[0], baseMidPoint[1]]
+    const webglHeadX = (hp[0] / canvas.width) * 2 - 1
+    const webglHeadY = 1 - (hp[1] / canvas.height) * 2
+    const webglBaseMidX = (bmp[0] / canvas.width) * 2 - 1
+    const webglBaseMidY = 1 - (bmp[1] / canvas.height) * 2
+
+    // Ensure the vertex buffer is defined
+    if (!UIKRenderer.triangleVertexBuffer) {
+      console.error('Vertex buffer is not defined at draw time')
+      return
+    }
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, UIKRenderer.triangleVertexBuffer)
+
+    // Calculate left and right base vertices
+    const directionX = webglHeadX - webglBaseMidX
+    const directionY = webglHeadY - webglBaseMidY
+    const length = Math.sqrt(directionX * directionX + directionY * directionY)
+    const unitPerpX = -directionY / length
+    const unitPerpY = directionX / length
+    const baseLengthNormalizedX = (baseLength / canvas.width) * 2
+    const baseLengthNormalizedY = (baseLength / canvas.height) * 2
+    const leftBaseX = webglBaseMidX - unitPerpX * (baseLengthNormalizedX / 2)
+    const leftBaseY = webglBaseMidY - unitPerpY * (baseLengthNormalizedY / 2)
+    const rightBaseX = webglBaseMidX + unitPerpX * (baseLengthNormalizedX / 2)
+    const rightBaseY = webglBaseMidY + unitPerpY * (baseLengthNormalizedY / 2)
+
+    // Update the vertex buffer with three vertices (head, left base, right base)
+    const vertices = new Float32Array([
+      webglHeadX,
+      webglHeadY, // Head of the triangle
+      leftBaseX,
+      leftBaseY, // Left base vertex
+      rightBaseX,
+      rightBaseY // Right base vertex
+    ])
+
+    this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, vertices)
+
+    // Use the shader program
+    UIKRenderer.triangleShader.use(this.gl)
+
+    // Bind the position attribute
+    const positionLocation = UIKRenderer.triangleShader.uniforms.a_position as GLuint
+    this.gl.enableVertexAttribArray(positionLocation)
+    this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0)
+
+    // Set u_antialiasing in pixels and canvas size in pixels
+    this.gl.uniform1f(UIKRenderer.triangleShader.uniforms.u_antialiasing, baseLength * 0.01) // Example proportion
+    this.gl.uniform2f(UIKRenderer.triangleShader.uniforms.u_canvasSize, canvas.width, canvas.height)
+
+    // Set the color uniform
+    this.gl.uniform4fv(UIKRenderer.triangleShader.uniforms.u_color, color as Float32List)
+
+    // Set z value
+    this.gl.uniform1f(UIKRenderer.triangleShader.uniforms.u_z, z)
+
+    // Draw the triangle
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3)
+    this.gl.bindVertexArray(null)
+  }
+  
+  /**
+   * Draws a circle.
+   * @param params - Object containing the circle parameters.
+   * @param params.leftTopWidthHeight - The bounding box of the circle (left, top, width, height).
+   * @param params.circleColor - The color of the circle.
+   * @param params.fillPercent - The percentage of the circle to fill (0 to 1).
+   * @param params.z - The z-index value of the circle.
+   */
+  public drawCircle({
+    leftTopWidthHeight,
+    circleColor = [1, 1, 1, 1],
+    fillPercent = 1.0,
+    z = 0
+  }: {
+    leftTopWidthHeight: Vec4
+    circleColor?: Color
+    fillPercent?: number
+    z?: number
+  }): void {
+    if (!UIKRenderer.circleShader) {
+      throw new Error('circleShader undefined')
+    }
+
+    UIKRenderer.circleShader.use(this.gl)
+    this.gl.enable(this.gl.BLEND)
+    this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.circleColor, circleColor as Float32List)
+    this.gl.uniform2fv(UIKRenderer.circleShader.uniforms.canvasWidthHeight, [
+      this.gl.canvas.width,
+      this.gl.canvas.height
+    ])
+
+    const rectParams = Array.isArray(leftTopWidthHeight)
+      ? vec4.fromValues(leftTopWidthHeight[0], leftTopWidthHeight[1], leftTopWidthHeight[2], leftTopWidthHeight[3])
+      : leftTopWidthHeight
+
+    this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.leftTopWidthHeight, rectParams as Float32List)
+    this.gl.uniform1f(UIKRenderer.circleShader.uniforms.fillPercent, fillPercent)
+    this.gl.uniform1f(UIKRenderer.circleShader.uniforms.z, z)
+    this.gl.bindVertexArray(UIKRenderer.genericVAO)
+    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
+    this.gl.bindVertexArray(null) // Unbind to avoid side effects
+  }
+
+  /**
+   * Draws a line with specified start and end coordinates, thickness, color, and style.
+   * Supports solid, dashed, or dotted lines, with optional terminators (such as arrows or rings).
+   * For dashed and dotted lines, segments or dots will adjust to reach the endpoint or terminator.
+   *
+   * @param config - Configuration object containing the following properties:
+   *   - startEnd: The start and end coordinates of the line, as a Vec4 array in the form [startX, startY, endX, endY].
+   *   - thickness?: The thickness of the line. Defaults to 1.
+   *   - color?: The color of the line, as a Color array in [R, G, B, A] format. Defaults to red ([1, 0, 0, -1]).
+   *   - terminator?: The type of terminator at the end of the line (e.g., NONE, ARROW, CIRCLE, or RING). Defaults to NONE.
+   *   - style?: The style of the line: solid, dashed, or dotted. Defaults to solid.
+   *   - dashDotLength?: The length of dashes or diameter of dots for dashed/dotted lines. Defaults to 5.
+   */
+  public drawLine(config: {
+    startEnd: Vec4
+    thickness?: number
+    color?: Color
+    terminator?: LineTerminator
+    style?: LineStyle
+    dashDotLength?: number
+  }): void {
+    const {
+      startEnd,
+      thickness = 1,
+      color = [1, 0, 0, -1],
+      terminator = LineTerminator.NONE,
+      style = LineStyle.SOLID,
+      dashDotLength = 5
+    } = config
+    const gl = this.gl
+
+    // Extract start and end points
+    const lineCoords = Array.isArray(startEnd)
+      ? vec4.fromValues(startEnd[0], startEnd[1], startEnd[2], startEnd[3])
+      : startEnd
+
+    let [startX, startY, endX, endY] = lineCoords
+
+    // Calculate direction and adjust for terminator
+    const direction = vec2.sub(vec2.create(), [endX, endY], [startX, startY])
+    vec2.normalize(direction, direction)
+
+    const terminatorSize = thickness * 3 // Example terminator size based on thickness
+
+    // Adjust line length by half the terminator width if a terminator exists
+    if (terminator !== LineTerminator.NONE) {
+      endX -= direction[0] * (terminatorSize / 2)
+      endY -= direction[1] * (terminatorSize / 2)
+    }
+
+    if (style === LineStyle.DASHED || style === LineStyle.DOTTED) {
+      const lineLength = vec2.distance([startX, startY], [endX, endY])
+      const segmentSpacing = style === LineStyle.DASHED ? dashDotLength * 1.5 : dashDotLength * 2
+      const segmentCount = Math.floor(lineLength / segmentSpacing)
+
+      for (let i = 0; i <= segmentCount; i++) {
+        const segmentStart = vec2.scaleAndAdd(vec2.create(), [startX, startY], direction, i * segmentSpacing)
+
+        if (i === segmentCount) {
+          // Connect the last dash or dot to the adjusted endpoint
+          if (style === LineStyle.DASHED) {
+            const segmentCoords = vec4.fromValues(segmentStart[0], segmentStart[1], endX, endY)
+            this.drawSegment({ segmentCoords, thickness, color })
+          } else if (style === LineStyle.DOTTED) {
+            this.drawCircle({
+              leftTopWidthHeight: [endX - dashDotLength / 2, endY - dashDotLength / 2, dashDotLength, dashDotLength],
+              circleColor: color
+            })
+          }
+        } else {
+          if (style === LineStyle.DASHED) {
+            // Draw dashed segment
+            const segmentEnd = vec2.scaleAndAdd(vec2.create(), segmentStart, direction, dashDotLength)
+            const segmentCoords = vec4.fromValues(segmentStart[0], segmentStart[1], segmentEnd[0], segmentEnd[1])
+            this.drawSegment({ segmentCoords, thickness, color })
+          } else if (style === LineStyle.DOTTED) {
+            // Draw dot as a small circle
+            this.drawCircle({
+              leftTopWidthHeight: [
+                segmentStart[0] - dashDotLength / 2,
+                segmentStart[1] - dashDotLength / 2,
+                dashDotLength,
+                dashDotLength
+              ],
+              circleColor: color
+            })
+          }
+        }
+      }
+    } else {
+      // Draw solid line if no dash/dot style specified
+      const shortenedLine = vec4.fromValues(startX, startY, endX, endY)
+      UIKRenderer.lineShader.use(gl)
+      gl.enable(gl.BLEND)
+      gl.uniform4fv(UIKRenderer.lineShader.uniforms.lineColor, color as Float32List)
+      gl.uniform2fv(UIKRenderer.lineShader.uniforms.canvasWidthHeight, [gl.canvas.width, gl.canvas.height])
+      gl.uniform1f(UIKRenderer.lineShader.uniforms.thickness, thickness)
+      gl.uniform4fv(UIKRenderer.lineShader.uniforms.startXYendXY, shortenedLine)
+
+      gl.bindVertexArray(UIKRenderer.genericVAO)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      gl.bindVertexArray(null) // Unbind to avoid side effects
+    }
+
+    // Draw the terminator
+    switch (terminator) {
+      case LineTerminator.ARROW:
+        this.drawTriangle({
+          headPoint: [startEnd[2], startEnd[3]],
+          baseMidPoint: [endX - (direction[0] * terminatorSize) / 2, endY - (direction[1] * terminatorSize) / 2],
+          baseLength: terminatorSize,
+          color
+        })
+        break
+      case LineTerminator.CIRCLE:
+        this.drawCircle({
+          leftTopWidthHeight: [
+            startEnd[2] - terminatorSize / 2,
+            startEnd[3] - terminatorSize / 2,
+            terminatorSize,
+            terminatorSize
+          ],
+          circleColor: color
+        })
+        break
+      case LineTerminator.RING:
+        this.drawCircle({
+          leftTopWidthHeight: [
+            startEnd[2] - terminatorSize / 2,
+            startEnd[3] - terminatorSize / 2,
+            terminatorSize,
+            terminatorSize
+          ],
+          circleColor: color,
+          fillPercent: 0.5
+        })
+        break
+    }
+  }
+
+  /**
+   * Helper method to draw individual dashed segments.
+   * @param config - Configuration object containing the following properties:
+   *   - segmentCoords: The start and end coordinates of the segment, as a Vec4 array in the form [startX, startY, endX, endY].
+   *   - thickness: The thickness of the segment.
+   *   - color: The color of the segment, as a Color array in [R, G, B, A] format.
+   */
+  private drawSegment(config: { segmentCoords: Vec4; thickness: number; color: Color }): void {
+    const { segmentCoords, thickness, color } = config
+    const gl = this.gl
+
+    UIKRenderer.lineShader.use(gl)
+    gl.uniform4fv(UIKRenderer.lineShader.uniforms.lineColor, color as Float32List)
+    gl.uniform1f(UIKRenderer.lineShader.uniforms.thickness, thickness)
+    gl.uniform4fv(UIKRenderer.lineShader.uniforms.startXYendXY, segmentCoords)
+
+    gl.bindVertexArray(UIKRenderer.genericVAO)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    gl.bindVertexArray(null) // Unbind to avoid side effects
   }
 }
