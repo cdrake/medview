@@ -26,15 +26,16 @@ export class CoreRenderer {
   }
 
   /**
-   * Main draw method that demonstrates rendering shapes and rotated text.
-   */
-  draw(): void {
-    if(!this.defaultFont.isFontLoaded) {
-        return
+ * Main draw method that demonstrates rendering shapes, rotated text, and a ruler.
+ */
+draw(): void {
+    if (!this.defaultFont.isFontLoaded) {
+      return
     }
+  
     // Clear the canvas with a black background
     this.clear([0, 0, 0, 1])
-
+  
     // Draw a triangle
     this.renderer.drawTriangle({
       headPoint: [100, 600],
@@ -42,14 +43,14 @@ export class CoreRenderer {
       baseLength: 200,
       color: [1, 0, 0, 1] // Red triangle
     })
-
+  
     // Draw a circle
     this.renderer.drawCircle({
       leftTopWidthHeight: [250, 700, 150, 150],
       circleColor: [0, 0, 1, 1], // Blue circle
       fillPercent: 1.0
     })
-
+  
     // Draw a line
     this.renderer.drawLine({
       startEnd: [200, 800, 600, 610],
@@ -58,28 +59,43 @@ export class CoreRenderer {
       style: LineStyle.SOLID,
       terminator: LineTerminator.ARROW
     })
-
-    // // Draw another triangle
+  
+    // Draw another triangle
     this.renderer.drawTriangle({
       headPoint: [500, 600],
       baseMidPoint: [500, 800],
       baseLength: 200,
       color: [1, 1, 0, 1] // Yellow triangle
     })
-
-     // Draw rotated text if the default font is loaded
+  
+    // Draw rotated text
     this.renderer.drawRotatedText({
-        font: this.defaultFont,
-        xy: [100, 100], // Starting position of the text
-        str: 'Hello, MedView!', // The string to render
-        scale: 0.50, // Scale factor
-        color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-        rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-        outlineColor: [0, 0, 0, 1], // Outline color (black)
-        outlineThickness: 2 // Outline thickness
+      font: this.defaultFont,
+      xy: [100, 100], // Starting position of the text
+      str: 'Hello, MedView!', // The string to render
+      scale: 0.50, // Scale factor
+      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+      outlineColor: [0, 0, 0, 1], // Outline color (black)
+      outlineThickness: 2 // Outline thickness
     })
-    
+  
+    // Draw a ruler
+    this.renderer.drawRuler({
+      pointA: [300, 500], // Starting point of the ruler
+      pointB: [600, 500], // Ending point of the ruler
+      length: 30.5, // Length value to display
+      units: 'cm', // Units to display
+      font: this.defaultFont, // Font for text
+      textColor: [1, 0, 0, 1], // Red text
+      lineColor: [1, 1, 1, 1], // Black ruler lines
+      lineThickness: 2, // Thickness of the lines
+      offset: 50, // Offset distance for parallel line and text
+      scale: 1.0, // Scale factor for text
+      showTickmarkNumbers: true // Show tickmark numbers
+    })
   }
+  
 
   /**
    * Clears the canvas.
