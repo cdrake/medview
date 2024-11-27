@@ -238,8 +238,6 @@ export class UIKRenderer {
       throw new Error('circleShader undefined')
     }
 
-    this.gl.viewport(0, 0, this.gl.canvas.width * window.devicePixelRatio || 1, this.gl.canvas.height * window.devicePixelRatio || 1)
-
     UIKRenderer.circleShader.use(this.gl)
     this.gl.enable(this.gl.BLEND)
     this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.circleColor, circleColor as Float32List)
@@ -495,17 +493,11 @@ export class UIKRenderer {
     const orthoMatrix = mat4.create()
     mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
 
-    // const dpr = window.devicePixelRatio || 1
-    // gl.canvas.width = (gl.canvas as HTMLCanvasElement).clientWidth * dpr
-    // gl.canvas.height = (gl.canvas as HTMLCanvasElement).clientHeight * dpr
-    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-
     // Iterate over each character in the string
     let x = xy[0]
     let y = xy[1]
 
     const size = font.textHeight * Math.min(gl.canvas.height, gl.canvas.width) * scale
-    console.log('size ', size)
     const chars = Array.from(str)
     for (const char of chars) {
       const metrics = font.fontMets!.mets[char]

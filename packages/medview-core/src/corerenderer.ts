@@ -35,13 +35,13 @@ export class CoreRenderer {
     // Clear the canvas with a black background
     this.clear([0, 0, 0, 1])
 
-    // // Draw a triangle
-    // this.renderer.drawTriangle({
-    //   headPoint: [100, 600],
-    //   baseMidPoint: [100, 800],
-    //   baseLength: 200,
-    //   color: [1, 0, 0, 1] // Red triangle
-    // })
+    // Draw a triangle
+    this.renderer.drawTriangle({
+      headPoint: [100, 600],
+      baseMidPoint: [100, 800],
+      baseLength: 200,
+      color: [1, 0, 0, 1] // Red triangle
+    })
 
     // Draw a circle
     this.renderer.drawCircle({
@@ -59,7 +59,7 @@ export class CoreRenderer {
       terminator: LineTerminator.ARROW
     })
 
-    // Draw another triangle
+    // // Draw another triangle
     this.renderer.drawTriangle({
       headPoint: [500, 600],
       baseMidPoint: [500, 800],
@@ -68,16 +68,16 @@ export class CoreRenderer {
     })
 
      // Draw rotated text if the default font is loaded
-        this.renderer.drawRotatedText({
-          font: this.defaultFont,
-          xy: [100, 100], // Starting position of the text
-          str: 'Hello, MedView!', // The string to render
-          scale: 0.50, // Scale factor
-          color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-          rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-          outlineColor: [0, 0, 0, 1], // Outline color (black)
-          outlineThickness: 2 // Outline thickness
-        })
+    this.renderer.drawRotatedText({
+        font: this.defaultFont,
+        xy: [100, 100], // Starting position of the text
+        str: 'Hello, MedView!', // The string to render
+        scale: 0.50, // Scale factor
+        color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+        rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+        outlineColor: [0, 0, 0, 1], // Outline color (black)
+        outlineThickness: 2 // Outline thickness
+    })
     
   }
 
