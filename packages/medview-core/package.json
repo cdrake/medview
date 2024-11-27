@@ -1,9 +1,9 @@
 {
   "name": "@medview/core",
   "version": "0.1.0",
-  "main": "dist/medview-core.cjs.js", 
-  "module": "dist/medview-core.es.js", 
-  "types": "dist/index.d.ts", 
+  "main": "dist/medview-core.cjs.js",
+  "module": "dist/medview-core.es.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "vitest run",
     "build": "vite build && tsc --project tsconfig.json"
@@ -13,10 +13,10 @@
   "license": "ISC",
   "description": "",
   "files": [
-    "dist" 
+    "dist"
   ],
   "dependencies": {
-    "@medview/uikit": "file:../uikit" 
+    "@medview/uikit": "file:../uikit"
   },
   "exports": {
     ".": {

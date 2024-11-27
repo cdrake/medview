@@ -1,16 +1,16 @@
 {
   "name": "@medview/uikit",
   "version": "0.1.0",
-  "main": "dist/uikit.cjs.js",
-  "module": "dist/uikit.es.js",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
+  "types": "dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/uikit.es.js",
-      "require": "./dist/uikit.cjs.js",
-      "types": "./dist/index.d.ts"
+     "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/types/index.d.ts"
     }
   },
-  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],

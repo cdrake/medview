@@ -1,22 +1,20 @@
 import { mat4, vec2, vec4 } from 'gl-matrix'
 import { UIKShader } from './uikshader.js'
-import circleVert from './shaders/vert/circle.glsl'
-import circleFrag from './shaders/frag/circle.glsl'
-import colorbarVert from './shaders/vert/colorbar.glsl'
-import colorbarFrag from './shaders/frag/colorbar.glsl'
-import ellipseVert from './shaders/vert/ellipse.glsl'
-import ellipseFrag from './shaders/frag/ellipse.glsl'
-import lineVert from './shaders/vert/line.glsl'
-import lineFrag from './shaders/frag/line.glsl'
-import projectedLineVert from './shaders/vert/projectedLine.glsl'
-import projectedLineFrag from './shaders/frag/rect.glsl' // Reuse rect shader for line color
-import rectVert from './shaders/vert/rect.glsl'
-import rectFrag from './shaders/frag/rect.glsl'
-import roundedRectFrag from './shaders/frag/roundedRect.glsl'
-import triangleVert from './shaders/vert/triangle.glsl'
-import triangleFrag from './shaders/frag/triangle.glsl'
-import rotatedFontVert from './shaders/vert/rotatedFont.glsl'
-import rotatedFontFrag from './shaders/frag/rotatedFont.glsl'
+import circleVert from './shaders/vert/circle.vert.glsl'
+import circleFrag from './shaders/frag/circle.frag.glsl'
+import colorbarVert from './shaders/vert/colorbar.vert.glsl'
+import colorbarFrag from './shaders/frag/colorbar.frag.glsl'
+import ellipseVert from './shaders/vert/elliptical-fill.vert.glsl'
+import ellipseFrag from './shaders/frag/elliptical-fill.frag.glsl'
+import lineVert from './shaders/vert/line.vert.glsl'
+import projectedLineVert from './shaders/vert/projectedLine.vert.glsl'
+import rectVert from './shaders/vert/rect.vert.glsl'
+import solidColorFrag from './shaders/frag/solidColor.frag.glsl'
+import roundedRectFrag from './shaders/frag/rounded-rect.frag.glsl'
+import triangleVert from './shaders/vert/triangle.vert.glsl'
+import triangleFrag from './shaders/frag/triangle.frag.glsl'
+import rotatedFontVert from './shaders/vert/rotatedFont.vert.glsl'
+import rotatedFontFrag from './shaders/frag/rotatedFont.frag.glsl'
 import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 
 export class UIKRenderer {
@@ -37,11 +35,11 @@ export class UIKRenderer {
     this.gl = gl
     
     if(!UIKRenderer.lineShader) {
-      UIKRenderer.lineShader = new UIKShader(gl, lineVert, lineFrag)
+      UIKRenderer.lineShader = new UIKShader(gl, lineVert, solidColorFrag)
     }
 
     if (!UIKRenderer.rectShader) {
-      UIKRenderer.rectShader = new UIKShader(gl, rectVert, rectFrag)
+      UIKRenderer.rectShader = new UIKShader(gl, rectVert, solidColorFrag)
     }
 
     if (!UIKRenderer.roundedRectShader) {
@@ -65,7 +63,7 @@ export class UIKRenderer {
     }
 
     if (!UIKRenderer.projectedLineShader) {
-      UIKRenderer.projectedLineShader = new UIKShader(gl, projectedLineVert, projectedLineFrag)
+      UIKRenderer.projectedLineShader = new UIKShader(gl, projectedLineVert, solidColorFrag)
     }
 
     if (!UIKRenderer.ellipticalFillShader) {
@@ -90,6 +88,29 @@ export class UIKRenderer {
       gl.enableVertexAttribArray(0)
       gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0)
 
+      gl.bindVertexArray(null)
+      const texCoordData = [
+        1.0,
+        1.0, // Top-right
+        1.0,
+        0.0, // Bottom-right
+        0.0,
+        1.0, // Top-left
+        0.0,
+        0.0 // Bottom-left
+      ]
+
+      const texCoordBuffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoordData), gl.STATIC_DRAW)
+
+      // Assign a_texcoord (location = 1)
+      gl.enableVertexAttribArray(1)
+      gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0)
+
+      gl.bindVertexArray(null) // Unbind VAO when done
+      
+
       UIKRenderer.genericVAO = vao
     }
 
@@ -101,6 +122,9 @@ export class UIKRenderer {
       // Allocate space for 3 vertices (triangle), each with 2 components (x, y)
       const initialVertices = new Float32Array(6)
       this.gl.bufferData(this.gl.ARRAY_BUFFER, initialVertices, this.gl.DYNAMIC_DRAW)
+      gl.bindVertexArray(null) // Unbind VAO when done
+      // Unbind the buffer to prevent accidental modification
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
     }
   }
 
@@ -167,7 +191,6 @@ export class UIKRenderer {
     ])
 
     this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, vertices)
-
     // Use the shader program
     UIKRenderer.triangleShader.use(this.gl)
 
@@ -213,6 +236,8 @@ export class UIKRenderer {
     if (!UIKRenderer.circleShader) {
       throw new Error('circleShader undefined')
     }
+
+    this.gl.viewport(0, 0, this.gl.canvas.width * window.devicePixelRatio || 1, this.gl.canvas.height * window.devicePixelRatio || 1)
 
     UIKRenderer.circleShader.use(this.gl)
     this.gl.enable(this.gl.BLEND)
