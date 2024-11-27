@@ -7,15 +7,16 @@ import colorbarFrag from './shaders/frag/colorbar.frag.glsl'
 import ellipseVert from './shaders/vert/elliptical-fill.vert.glsl'
 import ellipseFrag from './shaders/frag/elliptical-fill.frag.glsl'
 import lineVert from './shaders/vert/line.vert.glsl'
-import projectedLineVert from './shaders/vert/projectedLine.vert.glsl'
+import projectedLineVert from './shaders/vert/projected-line.vert.glsl'
 import rectVert from './shaders/vert/rect.vert.glsl'
-import solidColorFrag from './shaders/frag/solidColor.frag.glsl'
+import solidColorFrag from './shaders/frag/solid-color.frag.glsl'
 import roundedRectFrag from './shaders/frag/rounded-rect.frag.glsl'
 import triangleVert from './shaders/vert/triangle.vert.glsl'
 import triangleFrag from './shaders/frag/triangle.frag.glsl'
-import rotatedFontVert from './shaders/vert/rotatedFont.vert.glsl'
-import rotatedFontFrag from './shaders/frag/rotatedFont.frag.glsl'
+import rotatedFontVert from './shaders/vert/rotated-font.vert.glsl'
+import rotatedFontFrag from './shaders/frag/rotated-font.frag.glsl'
 import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
+import { UIKFont } from './assets/uikfont.js'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
@@ -24,7 +25,7 @@ export class UIKRenderer {
   protected static rectShader: UIKShader
   protected static roundedRectShader: UIKShader
   protected static triangleShader: UIKShader
-  protected static rotatedTextShader: UIKShader
+  protected static rotatedFontShader: UIKShader
   protected static colorbarShader: UIKShader
   protected static projectedLineShader: UIKShader
   protected static ellipticalFillShader: UIKShader
@@ -54,8 +55,8 @@ export class UIKRenderer {
       UIKRenderer.triangleShader = new UIKShader(gl, triangleVert, triangleFrag)
     }
 
-    if (!UIKRenderer.rotatedTextShader) {
-      UIKRenderer.rotatedTextShader = new UIKShader(gl, rotatedFontVert, rotatedFontFrag)
+    if (!UIKRenderer.rotatedFontShader) {
+      UIKRenderer.rotatedFontShader = new UIKShader(gl, rotatedFontVert, rotatedFontFrag)
     }
 
     if (!UIKRenderer.colorbarShader) {
@@ -418,5 +419,126 @@ export class UIKRenderer {
     gl.bindVertexArray(UIKRenderer.genericVAO)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     gl.bindVertexArray(null) // Unbind to avoid side effects
+  }
+
+  /**
+   * Draws rotated text, supporting individual character rendering and RTL.
+   * @param params - Object containing parameters for rendering rotated text.
+   * @param params.font - The font object for rendering text.
+   * @param params.xy - The starting position of the text.
+   * @param params.str - The string to render.
+   * @param params.scale - The scale of the text. Defaults to 1.0.
+   * @param params.color - The color of the text. Defaults to red.
+   * @param params.rotation - The rotation angle in radians. Defaults to 0.
+   * @param params.outlineColor - The outline color of the text. Defaults to black.
+   * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
+   */
+  public drawRotatedText({
+    font,
+    xy,
+    str,
+    scale = 1.0,
+    color = [1.0, 0.0, 0.0, 1.0],
+    rotation = 0.0,
+    outlineColor = [0, 0, 0, 1.0],
+    outlineThickness = 2
+  }: {
+    font: UIKFont
+    xy: Vec2
+    str: string
+    scale?: number
+    color?: Color
+    rotation?: number
+    outlineColor?: Color
+    outlineThickness?: number
+  }): void {
+    if (!font.isFontLoaded) {
+      console.error('font not loaded')
+      return
+    }
+
+    if (!UIKRenderer.rotatedFontShader) {
+      throw new Error('rotatedTextShader undefined')
+    }
+
+    const rotatedFontShader = UIKRenderer.rotatedFontShader
+    const gl = this.gl
+
+    // Bind the font texture
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, font.getTexture())
+
+    rotatedFontShader.use(gl)
+
+    // Enable blending for text rendering
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    gl.disable(gl.DEPTH_TEST) // TODO: remove
+    gl.disable(gl.CULL_FACE)
+
+    // Set uniform values
+    const finalColor = color || font.fontColor
+    gl.uniform4fv(rotatedFontShader.uniforms.fontColor, finalColor as Float32List)
+    let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
+    screenPxRange = Math.max(screenPxRange, 1.0) // screenPxRange must never be lower than 1
+    gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
+    gl.uniform1i(rotatedFontShader.uniforms.fontTexture, 0)
+
+    // Outline uniforms
+    gl.uniform4fv(rotatedFontShader.uniforms.outlineColor, outlineColor as Float32List)
+    gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, outlineThickness)
+
+    // Bind VAO for generic rectangle
+    gl.bindVertexArray(UIKRenderer.genericVAO)
+
+    // Set up orthographic projection matrix
+    const orthoMatrix = mat4.create()
+    mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
+
+    // const dpr = window.devicePixelRatio || 1
+    // gl.canvas.width = (gl.canvas as HTMLCanvasElement).clientWidth * dpr
+    // gl.canvas.height = (gl.canvas as HTMLCanvasElement).clientHeight * dpr
+    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+
+    // Iterate over each character in the string
+    let x = xy[0]
+    let y = xy[1]
+
+    const size = font.textHeight * Math.min(gl.canvas.height, gl.canvas.width) * scale
+    console.log('size ', size)
+    const chars = Array.from(str)
+    for (const char of chars) {
+      const metrics = font.fontMets!.mets[char]
+      if (!metrics) {
+        continue
+      }
+
+      const modelMatrix = mat4.create()
+      mat4.translate(modelMatrix, modelMatrix, [
+        x + Math.sin(rotation) * metrics.lbwh[1] * size,
+        y - Math.cos(rotation) * metrics.lbwh[1] * size,
+        0.0
+      ])
+      mat4.rotateZ(modelMatrix, modelMatrix, rotation)
+      mat4.scale(modelMatrix, modelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
+
+      // Combine the orthographic matrix with the model matrix to create the final MVP matrix
+      const mvpMatrix = mat4.create()
+      mat4.multiply(mvpMatrix, orthoMatrix, modelMatrix)
+
+      // Set uniform values for MVP matrix and UV coordinates
+      gl.uniformMatrix4fv(rotatedFontShader.uniforms.modelViewProjectionMatrix, false, mvpMatrix)
+      gl.uniform4fv(rotatedFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+
+      // Update x position for the next character, advancing with rotation in mind
+      const advanceX = Math.cos(rotation) * metrics.xadv * size
+      const advanceY = Math.sin(rotation) * metrics.xadv * size
+      x += advanceX
+      y += advanceY
+    }
+
+    // Unbind the VAO
+    gl.bindVertexArray(null)
   }
 }

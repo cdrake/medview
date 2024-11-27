@@ -1,10 +1,10 @@
-import { UIKRenderer, Vec2, Color, Vec4, LineTerminator, LineStyle } from '@medview/uikit' // Importing UIKRenderer from uikit
-// import { Vec2, Color, Vec4 } from '@medview/uikit/types'
+import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle } from '@medview/uikit'
 
 export class CoreRenderer {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
   private renderer: UIKRenderer
+  private defaultFont: UIKFont
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -16,48 +16,69 @@ export class CoreRenderer {
 
     // Initialize the UIKRenderer
     this.renderer = new UIKRenderer(this.gl)
+
+    // Load the default font
+    this.defaultFont = new UIKFont(this.gl)
+    this.defaultFont.loadDefaultFont().then(() => {
+      console.log('Default font loaded successfully')
+      this.draw() // Redraw once the font is loaded
+    })
   }
 
   /**
-   * Draws a triangle using the UIKRenderer.
-   * @param params - Parameters for the triangle.
+   * Main draw method that demonstrates rendering shapes and rotated text.
    */
-  drawTriangle(params: {
-    headPoint: Vec2
-    baseMidPoint: Vec2
-    baseLength: number
-    color: Color
-    z?: number
-  }): void {
-    this.renderer.drawTriangle(params)
-  }
+  draw(): void {
+    if(!this.defaultFont.isFontLoaded) {
+        return
+    }
+    // Clear the canvas with a black background
+    this.clear([0, 0, 0, 1])
 
-  /**
-   * Draws a circle using the UIKRenderer.
-   * @param params - Parameters for the circle.
-   */
-  drawCircle(params: {
-    leftTopWidthHeight: Vec4
-    circleColor?: Color
-    fillPercent?: number
-    z?: number
-  }): void {
-    this.renderer.drawCircle(params)
-  }
+    // // Draw a triangle
+    // this.renderer.drawTriangle({
+    //   headPoint: [100, 600],
+    //   baseMidPoint: [100, 800],
+    //   baseLength: 200,
+    //   color: [1, 0, 0, 1] // Red triangle
+    // })
 
-  /**
-   * Draws a line using the UIKRenderer.
-   * @param params - Parameters for the line.
-   */
-  drawLine(params: {
-    startEnd: Vec4
-    thickness?: number
-    color?: Color
-    terminator?: LineTerminator
-    style?: LineStyle
-    dashDotLength?: number
-  }): void {
-    this.renderer.drawLine(params)
+    // Draw a circle
+    this.renderer.drawCircle({
+      leftTopWidthHeight: [250, 700, 150, 150],
+      circleColor: [0, 0, 1, 1], // Blue circle
+      fillPercent: 1.0
+    })
+
+    // Draw a line
+    this.renderer.drawLine({
+      startEnd: [200, 800, 600, 610],
+      thickness: 5,
+      color: [0, 1, 0, 1], // Green line
+      style: LineStyle.SOLID,
+      terminator: LineTerminator.ARROW
+    })
+
+    // Draw another triangle
+    this.renderer.drawTriangle({
+      headPoint: [500, 600],
+      baseMidPoint: [500, 800],
+      baseLength: 200,
+      color: [1, 1, 0, 1] // Yellow triangle
+    })
+
+     // Draw rotated text if the default font is loaded
+        this.renderer.drawRotatedText({
+          font: this.defaultFont,
+          xy: [100, 100], // Starting position of the text
+          str: 'Hello, MedView!', // The string to render
+          scale: 0.50, // Scale factor
+          color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+          rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+          outlineColor: [0, 0, 0, 1], // Outline color (black)
+          outlineThickness: 2 // Outline thickness
+        })
+    
   }
 
   /**
@@ -76,8 +97,9 @@ export class CoreRenderer {
    * @param height - The new height of the canvas.
    */
   resize(width: number, height: number): void {
-    this.canvas.width = width * window.devicePixelRatio || 1
-    this.canvas.height = height * window.devicePixelRatio || 1
-    this.gl.viewport(0, 0, width, height)
+    const dpr = window.devicePixelRatio || 1
+    this.canvas.width = width * dpr
+    this.canvas.height = height * dpr
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
   }
 }

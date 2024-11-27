@@ -1,7 +1,7 @@
 import { vec2 } from 'gl-matrix'
 import { UIKShader } from '../uikshader.js'
-import vertFontShader from '../shaders/vert/font.glsl'
-import fragRotatedFontShader from '../shaders/frag/rotatedFont.glsl'
+import vertRotatedFontShader from '../shaders/vert/rotated-font.vert.glsl'
+import fragRotatedFontShader from '../shaders/frag/rotated-font.frag.glsl'
 import defaultFontPNG from '../fonts/Roboto-Regular.png'
 import defaultFontMetrics from '../fonts/Roboto-Regular.json' assert { type: 'json' }
 import { UIKAsset } from './uikasset.js'
@@ -41,7 +41,7 @@ export class UIKFont extends UIKAsset {
     this.outlineColor = outlineColor
     this.outlineThickness = outlineThickness
     this.textHeight = textHeight
-    this.fontShader = new UIKShader(this.gl, vertFontShader, fragRotatedFontShader)
+    this.fontShader = new UIKShader(this.gl, vertRotatedFontShader, fragRotatedFontShader)
   }
 
   public async loadFontTexture(fontUrl: string): Promise<void> {
