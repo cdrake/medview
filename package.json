@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test --workspaces --parallel"
+    "test": "npm run test --workspaces --parallel",
+    "build:uikit": "npm --prefix packages/uikit run build",
+    "build:medview-core": "npm --prefix packages/medview-core install && npm --prefix packages/medview-core run build",
+    "build:webapp": "npm --prefix apps/webapp install && npm --prefix apps/webapp run build",
+    "build": "npm run build:uikit && npm run build:medview-core && npm run build:webapp"
   },
   "keywords": [],
   "author": "",

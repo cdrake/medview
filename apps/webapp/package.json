@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build:core": "npm --prefix ../../packages/medview-core run build",
+    "install:core": "npm run build:core && npm install ../../packages/medview-core",
+    "build": "npm run install:core && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "npx playwright test"

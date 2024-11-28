@@ -6,7 +6,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "vitest run",
-    "build": "vite build && tsc --project tsconfig.json"
+    "build:uikit": "npm --prefix ../uikit run build",
+    "install:uikit": "npm run build:uikit && npm install ../uikit",
+    "build": "npm run install:uikit && vite build && tsc --project tsconfig.json"
   },
   "keywords": [],
   "author": "",
