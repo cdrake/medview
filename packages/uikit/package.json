@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "build": "vite build && tsc --project tsconfig.json"
+    "build": "vite build && tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [],
   "author": "Chris Drake",
@@ -29,5 +30,8 @@
   },
   "devDependencies": {
     "vite-plugin-glsl": "^1.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

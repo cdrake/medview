@@ -17,6 +17,7 @@ import rotatedFontVert from './shaders/vert/rotated-font.vert.glsl'
 import rotatedFontFrag from './shaders/frag/rotated-font.frag.glsl'
 import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 import { UIKFont } from './assets/uikfont.js'
+import { UIKBitmap } from './assets/uikbitmap.js'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
@@ -705,5 +706,60 @@ export class UIKRenderer {
     }
   }
 
+  /**
+   * Draws a bitmap on the canvas.
+   *
+   * @param config - Configuration object containing the bitmap, position, and scale.
+   * @param config.bitmap - The bitmap to draw.
+   * @param config.position - The position to place the bitmap ([x, y]).
+   * @param config.scale - The scale factor for the bitmap.
+   */
+  public drawBitmap({ bitmap, position, scale }: { bitmap: UIKBitmap; position: Vec2; scale: number }): void {
+    if (!bitmap.getTexture()) {
+      console.error('Bitmap texture not loaded')
+      return
+    }
+
+    const gl = this.gl
+    const shader = bitmap.bitmapShader
+    shader.use(gl)
+
+    gl.activeTexture(gl.TEXTURE0)
+    const texture = bitmap.getTexture()
+    if (!texture) {
+      console.error('Texture not found')
+      return
+    }
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+
+    gl.uniform1i(shader.uniforms.u_textureLocation, 0)
+
+    // Set the canvas size
+    const canvasWidth = gl.canvas.width
+    const canvasHeight = gl.canvas.height
+    gl.uniform2f(shader.uniforms.canvasWidthHeight, canvasWidth, canvasHeight)
+
+    // Set the position and size of the bitmap based on position and scale
+    const pos = Array.isArray(position) ? vec2.fromValues(position[0], position[1]) : position
+    const width = bitmap.getWidth() * scale
+    const height = bitmap.getHeight() * scale
+    gl.uniform4f(shader.uniforms.leftTopWidthHeight, pos[0], pos[1], width, height)
+
+    // Set the viewport
+    gl.viewport(0, 0, canvasWidth, canvasHeight)
+
+    // Bind the VAO and draw the bitmap
+    gl.bindVertexArray(UIKRenderer.genericVAO)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+
+    // Check for WebGL errors
+    const error = gl.getError()
+    if (error !== gl.NO_ERROR) {
+      console.error('WebGL Error:', error)
+    }
+
+    // Unbind the VAO
+    gl.bindVertexArray(null)
+  }
 
 }

@@ -14,7 +14,6 @@ void main() {
   if (distance < 0.5 && distance >= (1.0 - fillPercent) / 2.0) {
     color = circleColor;//vec4(circleColor.r, circleColor.g, circleColor.b, circleColor.a);
   } else {
-    // color = vec4(1.0, 0.0, 0.0, 1.0);
     discard;
   }
 }
