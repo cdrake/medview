@@ -556,6 +556,7 @@ export class UIKRenderer {
     units,
     font,
     textColor = [1, 0, 0, 1],
+    outlineColor = [1, 1, 1, 1],
     lineColor = [0, 0, 0, 1],
     lineThickness = 1,
     offset = 40,
@@ -568,6 +569,7 @@ export class UIKRenderer {
     units: string
     font: UIKFont
     textColor?: Color
+    outlineColor?: Color
     lineColor?: Color
     lineThickness?: number
     offset?: number
@@ -612,7 +614,7 @@ export class UIKRenderer {
     }
 
     // Draw the rotated length text at the adjusted position
-    this.drawRotatedText({ font, xy: textPosition, str: text, scale, color: textColor, rotation: angle })
+    this.drawRotatedText({ font, xy: textPosition, str: text, scale, color: textColor, outlineColor, rotation: angle })
 
     // Draw the units at half the requested scale
     const unitsScale = scale / 2
@@ -627,6 +629,7 @@ export class UIKRenderer {
       str: units,
       scale: unitsScale,
       color: textColor,
+      outlineColor,
       rotation: angle
     })
 
@@ -689,6 +692,7 @@ export class UIKRenderer {
             str: hashText,
             scale: hashTextScale,
             color: textColor,
+            outlineColor,
             rotation: angle
           })
         }

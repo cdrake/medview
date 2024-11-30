@@ -20,7 +20,7 @@ float median(float r, float g, float b) {
 void main() {
     vec3 msd = texture(fontTexture, vUV).rgb;
     float sd = median(msd.r, msd.g, msd.b);
-    
+    //float gamma = 0.3;
     // Convert outline thickness from pixels to normalized device coordinates (NDC)
     float outlineThicknessNDC = outlineThickness / max(canvasWidthHeight.x, canvasWidthHeight.y);
     float screenPxDistance = screenPxRange * (sd - 0.5);
@@ -35,7 +35,7 @@ void main() {
 
     // Combine the colors
     vec3 finalColor = mix(outlineColor.rgb, fontColor.rgb, glyphAlpha);
-    float finalAlpha = max(outlineAlpha * outlineColor.a, glyphAlpha * fontColor.a);
-
+    float finalAlpha = clamp((outlineAlpha * outlineColor.a + glyphAlpha * fontColor.a) * 5.0, 0.0, 1.0);
+    // finalAlpha = pow(finalAlpha, gamma);
     color = vec4(finalColor, finalAlpha);
 }
