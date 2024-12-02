@@ -8,3 +8,5 @@ export const coreFunction = () => {
 export const callUIKit = () => {
     return uiFunction()
 }
+
+export { CoreRenderer } from './corerenderer'

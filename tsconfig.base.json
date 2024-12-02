@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@medview/uikit": ["packages/uikit/src"],
+        "@medview/core": ["packages/core/src"]
+      }
+    }
+  }
+  
