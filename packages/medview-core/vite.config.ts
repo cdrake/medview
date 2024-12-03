@@ -1,18 +1,8 @@
-// import { defineConfig } from 'vite'
-
-// export default defineConfig({
-//   build: {
-//     lib: {
-//       entry: 'src/index.ts', // Path to your library entry file
-//       name: 'MedViewCore', // Global name for UMD builds
-//       fileName: (format) => `medview-core.${format}.js` // Output file naming
-//     }
-//   }
-// })
 import { defineConfig } from 'vite'
 import path from 'path'
 
 export default defineConfig({
+  assetsInclude: ['**/*.png'], // Ensure Vite includes .png files as assets
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'), // Entry file
@@ -24,6 +14,7 @@ export default defineConfig({
       output: {
         globals: {} // Add global variables for UMD builds if necessary
       }
-    }
+    }    
+    
   }
 })

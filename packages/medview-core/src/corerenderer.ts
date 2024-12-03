@@ -1,10 +1,13 @@
 import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle } from '@medview/uikit'
+const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
+const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
 
 export class CoreRenderer {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
   private renderer: UIKRenderer
   private defaultFont: UIKFont
+  private hebrewFont: UIKFont | null = null
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -21,14 +24,19 @@ export class CoreRenderer {
     this.defaultFont = new UIKFont(this.gl)
     this.defaultFont.loadDefaultFont().then(() => {
       console.log('Default font loaded successfully')
-      this.draw() // Redraw once the font is loaded
+      this.hebrewFont = new UIKFont(this.gl)
+      this.hebrewFont.loadFont(fontImage, fontMetrics).then(() => {
+        console.log('Heebo font loaded successfully')
+        this.draw() // Redraw once the font is loaded
+      })
+      
     })
   }
 
   /**
  * Main draw method that demonstrates rendering shapes, rotated text, and a ruler.
  */
-draw(): void {
+async draw(): Promise<void> {
     if (!this.defaultFont.isFontLoaded) {
       return
     }
@@ -37,71 +45,94 @@ draw(): void {
     this.clear([0, 0, 0, 1])
   
     // Draw a triangle
-    this.renderer.drawTriangle({
-      headPoint: [100, 600],
-      baseMidPoint: [100, 800],
-      baseLength: 200,
-      color: [1, 0, 0, 1] // Red triangle
-    })
+    // this.renderer.drawTriangle({
+    //   headPoint: [100, 600],
+    //   baseMidPoint: [100, 800],
+    //   baseLength: 200,
+    //   color: [1, 0, 0, 1] // Red triangle
+    // })
   
-    // Draw a circle
-    this.renderer.drawCircle({
-      leftTopWidthHeight: [250, 700, 150, 150],
-      circleColor: [0, 0, 1, 1], // Blue circle
-      fillPercent: 1.0
-    })
+    // // Draw a circle
+    // this.renderer.drawCircle({
+    //   leftTopWidthHeight: [250, 700, 150, 150],
+    //   circleColor: [0, 0, 1, 1], // Blue circle
+    //   fillPercent: 1.0
+    // })
   
-    // Draw a line
-    this.renderer.drawLine({
-      startEnd: [200, 800, 600, 610],
-      thickness: 5,
-      color: [0, 1, 0, 1], // Green line
-      style: LineStyle.SOLID,
-      terminator: LineTerminator.ARROW
-    })
+    // // Draw a line
+    // this.renderer.drawLine({
+    //   startEnd: [200, 800, 600, 610],
+    //   thickness: 5,
+    //   color: [0, 1, 0, 1], // Green line
+    //   style: LineStyle.SOLID,
+    //   terminator: LineTerminator.ARROW
+    // })
   
-    // Draw another triangle
-    this.renderer.drawTriangle({
-      headPoint: [500, 600],
-      baseMidPoint: [500, 800],
-      baseLength: 200,
-      color: [1, 1, 0, 1] // Yellow triangle
-    })
+    // // Draw another triangle
+    // this.renderer.drawTriangle({
+    //   headPoint: [500, 600],
+    //   baseMidPoint: [500, 800],
+    //   baseLength: 200,
+    //   color: [1, 1, 0, 1] // Yellow triangle
+    // })
   
-    // Draw rotated text
+    // // Draw rotated text
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont,
+    //   xy: [100, 100], // Starting position of the text
+    //   str: 'Hello, MedView!', // The string to render
+    //   scale: 0.50, // Scale factor
+    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+    //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
+    //   outlineThickness: 2 // Outline thickness
+    // })
+  
+    // // Draw a ruler
+    // this.renderer.drawRuler({
+    //   pointA: [300, 500], // Starting point of the ruler
+    //   pointB: [600, 500], // Ending point of the ruler
+    //   length: 30.5, // Length value to display
+    //   units: 'cm', // Units to display
+    //   font: this.defaultFont, // Font for text
+    //   textColor: [1, 0, 0, 1], // Red text
+    //   lineColor: [1, 1, 1, 1], // Black ruler lines
+    //   lineThickness: 2, // Thickness of the lines
+    //   offset: 50, // Offset distance for parallel line and text
+    //   scale: 1.0, // Scale factor for text
+    //   showTickmarkNumbers: true // Show tickmark numbers
+    // })
+
     this.renderer.drawRotatedText({
       font: this.defaultFont,
-      xy: [100, 100], // Starting position of the text
-      str: 'Hello, MedView!', // The string to render
-      scale: 0.50, // Scale factor
-      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-      outlineColor: [0, 0, 0, 1], // Outline color (black)
-      outlineThickness: 2 // Outline thickness
-    })
-  
-    // Draw a ruler
-    this.renderer.drawRuler({
-      pointA: [300, 500], // Starting point of the ruler
-      pointB: [600, 500], // Ending point of the ruler
-      length: 30.5, // Length value to display
-      units: 'cm', // Units to display
-      font: this.defaultFont, // Font for text
-      textColor: [1, 0, 0, 1], // Red text
-      lineColor: [1, 1, 1, 1], // Black ruler lines
-      lineThickness: 2, // Thickness of the lines
-      offset: 50, // Offset distance for parallel line and text
-      scale: 1.0, // Scale factor for text
-      showTickmarkNumbers: true // Show tickmark numbers
+      xy: [500, 200],
+      str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+      scale: 0.5,
+      color: [1, 1, 1, 1],
+      outlineColor: [0.25, 0.25, 1, 1],
+      rotation: Math.PI / 6, // 30-degree rotation
+      maxWidth: 300 // Wrap to fit within 300px
     })
 
-  this.renderer.drawLine({
-    startEnd: [500, 500, 1000, 800],
-    thickness: 5,
-    color: [0, 1, 0, 1], // Green line
-    style: LineStyle.SOLID,
-    terminator: LineTerminator.ARROW
-  })
+    if(this.hebrewFont) {
+    this.renderer.drawRotatedText({
+      font: this.hebrewFont,
+      xy: [800, 500],
+      str: 'שָׁלוֹם עֲלֵיכֶם',
+      scale: 0.5,
+      color: [1, 1, 1, 1],
+      outlineColor: [0.25, 0.25, 1, 1],
+      rotation: 0,//Math.PI / 6, // 30-degree rotation
+      maxWidth: 300 // Wrap to fit within 300px
+    })
+  }
+  // this.renderer.drawLine({
+  //   startEnd: [500, 500, 1000, 800],
+  //   thickness: 5,
+  //   color: [0, 1, 0, 1], // Green line
+  //   style: LineStyle.SOLID,
+  //   terminator: LineTerminator.ARROW
+  // })
   
   }
   

@@ -216,6 +216,18 @@ export class UIKFont extends UIKAsset {
     return vec2.fromValues(Math.max(currentWidth, maxWidth), lineCount * maxHeight)
   }
 
+  isDiacritic(char: string): boolean {
+    const codePoint = char.codePointAt(0)
+    // Check if the code point is within the Combining Marks ranges
+    return (
+      (codePoint! >= 0x0300 && codePoint! <= 0x036f) ||
+      (codePoint! >= 0x1ab0 && codePoint! <= 0x1aff) ||
+      (codePoint! >= 0x1dc0 && codePoint! <= 0x1dff) ||
+      (codePoint! >= 0x20d0 && codePoint! <= 0x20ff) ||
+      (codePoint! >= 0xfe20 && codePoint! <= 0xfe2f)
+    )
+  }
+
   public toJSON(): object {
     return {
       id: this.id,
