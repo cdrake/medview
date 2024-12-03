@@ -18,7 +18,8 @@
     "dist"
   ],
   "dependencies": {
-    "@medview/uikit": "file:../uikit"
+    "@medview/uikit": "file:../uikit",
+    "nifti-reader-js": "^0.6.8"
   },
   "exports": {
     ".": {
@@ -26,5 +27,8 @@
       "require": "./dist/medview-core.cjs.js",
       "types": "./dist/index.d.ts"
     }
+  },
+  "devDependencies": {
+    "vite-plugin-glsl": "^1.3.1"
   }
 }
