@@ -460,6 +460,108 @@ export class UIKRenderer {
    * @param params.outlineColor - The outline color of the text. Defaults to black.
    * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
    */
+  // public drawRotatedText({
+  //   font,
+  //   xy,
+  //   str,
+  //   scale = 1.0,
+  //   color = [1.0, 0.0, 0.0, 1.0],
+  //   rotation = 0.0,
+  //   outlineColor = [0, 0, 0, 1.0],
+  //   outlineThickness = 2
+  // }: {
+  //   font: UIKFont
+  //   xy: Vec2
+  //   str: string
+  //   scale?: number
+  //   color?: Color
+  //   rotation?: number
+  //   outlineColor?: Color
+  //   outlineThickness?: number
+  // }): void {
+  //   if (!font.isFontLoaded) {
+  //     console.error('font not loaded')
+  //     return
+  //   }
+
+  //   if (!UIKRenderer.rotatedFontShader) {
+  //     throw new Error('rotatedTextShader undefined')
+  //   }
+
+  //   const rotatedFontShader = UIKRenderer.rotatedFontShader
+  //   const gl = this.gl
+
+  //   // Bind the font texture
+  //   gl.activeTexture(gl.TEXTURE0)
+  //   gl.bindTexture(gl.TEXTURE_2D, font.getTexture())
+
+  //   rotatedFontShader.use(gl)
+
+  //   // Enable blending for text rendering
+  //   gl.enable(gl.BLEND)
+  //   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  //   gl.disable(gl.DEPTH_TEST) // TODO: remove
+  //   gl.disable(gl.CULL_FACE)
+
+  //   // Set uniform values
+  //   const finalColor = color || font.fontColor
+  //   gl.uniform4fv(rotatedFontShader.uniforms.fontColor, finalColor as Float32List)
+  //   let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
+  //   screenPxRange = Math.max(screenPxRange, 1.0) // screenPxRange must never be lower than 1
+  //   gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
+  //   gl.uniform1i(rotatedFontShader.uniforms.fontTexture, 0)
+
+  //   // Outline uniforms
+  //   gl.uniform4fv(rotatedFontShader.uniforms.outlineColor, outlineColor as Float32List)
+  //   gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, outlineThickness)
+
+  //   // Bind VAO for generic rectangle
+  //   gl.bindVertexArray(UIKRenderer.genericVAO)
+
+  //   // Set up orthographic projection matrix
+  //   const orthoMatrix = mat4.create()
+  //   mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
+
+  //   // Iterate over each character in the string
+  //   let x = xy[0]
+  //   let y = xy[1]
+
+  //   const size = font.textHeight * Math.min(gl.canvas.height, gl.canvas.width) * scale
+  //   const chars = Array.from(str)
+  //   for (const char of chars) {
+  //     const metrics = font.fontMets!.mets[char]
+  //     if (!metrics) {
+  //       continue
+  //     }
+
+  //     const modelMatrix = mat4.create()
+  //     mat4.translate(modelMatrix, modelMatrix, [
+  //       x + Math.sin(rotation) * metrics.lbwh[1] * size,
+  //       y - Math.cos(rotation) * metrics.lbwh[1] * size,
+  //       0.0
+  //     ])
+  //     mat4.rotateZ(modelMatrix, modelMatrix, rotation)
+  //     mat4.scale(modelMatrix, modelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
+
+  //     // Combine the orthographic matrix with the model matrix to create the final MVP matrix
+  //     const mvpMatrix = mat4.create()
+  //     mat4.multiply(mvpMatrix, orthoMatrix, modelMatrix)
+
+  //     // Set uniform values for MVP matrix and UV coordinates
+  //     gl.uniformMatrix4fv(rotatedFontShader.uniforms.modelViewProjectionMatrix, false, mvpMatrix)
+  //     gl.uniform4fv(rotatedFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
+  //     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+
+  //     // Update x position for the next character, advancing with rotation in mind
+  //     const advanceX = Math.cos(rotation) * metrics.xadv * size
+  //     const advanceY = Math.sin(rotation) * metrics.xadv * size
+  //     x += advanceX
+  //     y += advanceY
+  //   }
+
+  //   // Unbind the VAO
+  //   gl.bindVertexArray(null)
+  // }  
   public drawRotatedText({
     font,
     xy,
@@ -468,7 +570,8 @@ export class UIKRenderer {
     color = [1.0, 0.0, 0.0, 1.0],
     rotation = 0.0,
     outlineColor = [0, 0, 0, 1.0],
-    outlineThickness = 2
+    outlineThickness = 2,
+    maxWidth = 0 // Default to 0, meaning no wrapping
   }: {
     font: UIKFont
     xy: Vec2
@@ -478,31 +581,32 @@ export class UIKRenderer {
     rotation?: number
     outlineColor?: Color
     outlineThickness?: number
+    maxWidth?: number
   }): void {
     if (!font.isFontLoaded) {
       console.error('font not loaded')
       return
     }
-
+  
     if (!UIKRenderer.rotatedFontShader) {
       throw new Error('rotatedTextShader undefined')
     }
-
+  
     const rotatedFontShader = UIKRenderer.rotatedFontShader
     const gl = this.gl
-
+  
     // Bind the font texture
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, font.getTexture())
-
+  
     rotatedFontShader.use(gl)
-
+  
     // Enable blending for text rendering
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-    gl.disable(gl.DEPTH_TEST) // TODO: remove
+    gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.CULL_FACE)
-
+  
     // Set uniform values
     const finalColor = color || font.fontColor
     gl.uniform4fv(rotatedFontShader.uniforms.fontColor, finalColor as Float32List)
@@ -510,59 +614,97 @@ export class UIKRenderer {
     screenPxRange = Math.max(screenPxRange, 1.0) // screenPxRange must never be lower than 1
     gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
     gl.uniform1i(rotatedFontShader.uniforms.fontTexture, 0)
-
+  
     // Outline uniforms
     gl.uniform4fv(rotatedFontShader.uniforms.outlineColor, outlineColor as Float32List)
     gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, outlineThickness)
-
+  
     // Bind VAO for generic rectangle
     gl.bindVertexArray(UIKRenderer.genericVAO)
-
+  
     // Set up orthographic projection matrix
     const orthoMatrix = mat4.create()
     mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
-
-    // Iterate over each character in the string
-    let x = xy[0]
-    let y = xy[1]
-
+  
+    // Split text into lines based on maxWidth
     const size = font.textHeight * Math.min(gl.canvas.height, gl.canvas.width) * scale
-    const chars = Array.from(str)
-    for (const char of chars) {
-      const metrics = font.fontMets!.mets[char]
-      if (!metrics) {
-        continue
+    const words = str.split(' ')
+    const lines: string[] = []
+  
+    if (maxWidth > 0) {
+      let currentLine = ''
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word
+        const testWidth = font.getTextWidth(testLine, scale)
+        if (testWidth > maxWidth) {
+          lines.push(currentLine)
+          currentLine = word
+        } else {
+          currentLine = testLine
+        }
       }
-
-      const modelMatrix = mat4.create()
-      mat4.translate(modelMatrix, modelMatrix, [
-        x + Math.sin(rotation) * metrics.lbwh[1] * size,
-        y - Math.cos(rotation) * metrics.lbwh[1] * size,
-        0.0
-      ])
-      mat4.rotateZ(modelMatrix, modelMatrix, rotation)
-      mat4.scale(modelMatrix, modelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
-
-      // Combine the orthographic matrix with the model matrix to create the final MVP matrix
-      const mvpMatrix = mat4.create()
-      mat4.multiply(mvpMatrix, orthoMatrix, modelMatrix)
-
-      // Set uniform values for MVP matrix and UV coordinates
-      gl.uniformMatrix4fv(rotatedFontShader.uniforms.modelViewProjectionMatrix, false, mvpMatrix)
-      gl.uniform4fv(rotatedFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-
-      // Update x position for the next character, advancing with rotation in mind
-      const advanceX = Math.cos(rotation) * metrics.xadv * size
-      const advanceY = Math.sin(rotation) * metrics.xadv * size
-      x += advanceX
-      y += advanceY
+      if (currentLine) {
+        lines.push(currentLine)
+      }
+    } else {
+      lines.push(str) // No wrapping, treat the entire string as a single line
     }
-
+  
+    // Adjust line height to include outline thickness
+    const lineHeight = font.getTextHeight(str, scale) + outlineThickness * scale
+  
+    // Calculate perpendicular offset for each line
+    const perpendicularX = -Math.sin(rotation) * lineHeight
+    const perpendicularY = Math.cos(rotation) * lineHeight
+  
+    // Start from the first line's base position
+    let baselineX = xy[0]
+    let baselineY = xy[1]
+  
+    lines.forEach((line) => {
+      // Apply rotation to the whole line's starting position
+      const modelMatrix = mat4.create()
+      mat4.translate(modelMatrix, modelMatrix, [baselineX, baselineY, 0.0])
+      mat4.rotateZ(modelMatrix, modelMatrix, rotation)
+  
+      let currentX = 0 // Start X position relative to the line
+      for (const char of Array.from(line)) {
+        const metrics = font.fontMets!.mets[char]
+        if (!metrics) {
+          continue
+        }
+  
+        const charModelMatrix = mat4.clone(modelMatrix)
+        mat4.translate(charModelMatrix, charModelMatrix, [
+          currentX + Math.sin(rotation) * metrics.lbwh[1] * size,
+          -Math.cos(rotation) * metrics.lbwh[1] * size,
+          0.0
+        ])
+        mat4.scale(charModelMatrix, charModelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
+  
+        // Combine the orthographic matrix with the character's model matrix
+        const mvpMatrix = mat4.create()
+        mat4.multiply(mvpMatrix, orthoMatrix, charModelMatrix)
+  
+        // Set uniform values for MVP matrix and UV coordinates
+        gl.uniformMatrix4fv(rotatedFontShader.uniforms.modelViewProjectionMatrix, false, mvpMatrix)
+        gl.uniform4fv(rotatedFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+  
+        // Update position for the next character (check for right to left languages and if char is a diacritic)
+        currentX += metrics.xadv * size + (font.isDiacritic(char) ? 0 : ((metrics.xadv > 0) ? outlineThickness : -outlineThickness))
+      }
+  
+      // Move the baseline for the next line along the perpendicular axis
+      baselineX += perpendicularX
+      baselineY += perpendicularY
+    })
+  
     // Unbind the VAO
     gl.bindVertexArray(null)
   }
-
+  
+  
   /**
    * Draws a ruler with length text, units, and hash marks.
    * @param params - Object containing parameters for rendering the ruler.

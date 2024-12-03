@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+      "resolveJsonModule": true,
       "declaration": true, // Generate .d.ts files
       "declarationDir": "dist", // Output directory for .d.ts files
       "emitDeclarationOnly": true, // Only generate declaration files
