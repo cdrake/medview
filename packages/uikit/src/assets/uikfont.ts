@@ -4,6 +4,8 @@ import vertRotatedFontShader from '../shaders/vert/rotated-font.vert.glsl'
 import fragRotatedFontShader from '../shaders/frag/rotated-font.frag.glsl'
 import defaultFontPNG from '../fonts/Roboto-Regular.png'
 import defaultFontMetrics from '../fonts/Roboto-Regular.json' assert { type: 'json' }
+// import defaultFontPNG from '../fonts/NotoSansTC-VariableFont_wght.png'
+// import defaultFontMetrics from '../fonts/NotoSansTC-VariableFont_wght.json' assert { type: 'json' }
 import { UIKAsset } from './uikasset.js'
 
 export type FontMetrics = {
