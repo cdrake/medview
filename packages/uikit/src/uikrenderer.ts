@@ -15,6 +15,8 @@ import triangleVert from './shaders/vert/triangle.vert.glsl'
 import triangleFrag from './shaders/frag/triangle.frag.glsl'
 import rotatedFontVert from './shaders/vert/rotated-font.vert.glsl'
 import rotatedFontFrag from './shaders/frag/rotated-font.frag.glsl'
+import boxVert from './shaders/vert/box.vert.glsl'
+import boxFrag from './shaders/frag/box.frag.glsl'
 import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 import { UIKFont } from './assets/uikfont.js'
 import { UIKBitmap } from './assets/uikbitmap.js'
@@ -30,8 +32,10 @@ export class UIKRenderer {
   protected static colorbarShader: UIKShader
   protected static projectedLineShader: UIKShader
   protected static ellipticalFillShader: UIKShader
+  protected static boxShader: UIKShader
   protected static genericVAO: WebGLVertexArrayObject
   protected static triangleVertexBuffer: WebGLBuffer
+  protected static fullScreenVAO: WebGLVertexArrayObject
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl
@@ -39,11 +43,7 @@ export class UIKRenderer {
     if(!UIKRenderer.lineShader) {
       UIKRenderer.lineShader = new UIKShader(gl, lineVert, solidColorFrag)
     }
-
-    if (!UIKRenderer.rectShader) {
-      UIKRenderer.rectShader = new UIKShader(gl, rectVert, solidColorFrag)
-    }
-
+    
     if (!UIKRenderer.roundedRectShader) {
       UIKRenderer.roundedRectShader = new UIKShader(gl, rectVert, roundedRectFrag)
     }
@@ -70,6 +70,11 @@ export class UIKRenderer {
 
     if (!UIKRenderer.ellipticalFillShader) {
       UIKRenderer.ellipticalFillShader = new UIKShader(gl, ellipseVert, ellipseFrag)
+    }
+
+    // Initialize the box shader
+    if (!UIKRenderer.boxShader) {
+      UIKRenderer.boxShader = new UIKShader(gl, boxVert, boxFrag)
     }
 
     if (!UIKRenderer.genericVAO) {
@@ -115,6 +120,29 @@ export class UIKRenderer {
 
       UIKRenderer.genericVAO = vao
     }
+
+    // Initialize the full-screen VAO
+    if (!UIKRenderer.fullScreenVAO) {
+      const vao = gl.createVertexArray()!
+      const vbo = gl.createBuffer()!
+      gl.bindVertexArray(vao)
+
+      // Full-screen quad vertices
+      const quadVertices = new Float32Array([
+          -1.0, -1.0, // Bottom-left
+           1.0, -1.0, // Bottom-right
+          -1.0,  1.0, // Top-left
+           1.0,  1.0  // Top-right
+      ])
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+      gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.STATIC_DRAW)
+      gl.enableVertexAttribArray(0)
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+
+      gl.bindVertexArray(null)
+      UIKRenderer.fullScreenVAO = vao
+  }
 
     if (!UIKRenderer.triangleVertexBuffer) {
       // Create a static vertex buffer
@@ -765,5 +793,78 @@ export class UIKRenderer {
     // Unbind the VAO
     gl.bindVertexArray(null)
   }
+
+  /**
+     * Draw an oriented box using the box shader.
+     */
+//   public drawBox({
+//     boxStart,
+//     boxEnd,
+//     boxThickness,
+//     fillColor = [0.0, 0.0, 1.0, 1.0], // Default to blue with full opacity
+//     outlineColor = [1.0, 1.0, 1.0, 1.0], // Default to white with full opacity
+//     outlineThickness = 1.0 // Default outline thickness in pixels
+// }: {
+//     boxStart: Vec2 // Start point of the box in pixels
+//     boxEnd: Vec2 // End point of the box in pixels
+//     boxThickness: number // Thickness of the box in pixels
+//     fillColor?: Vec4 // Fill color
+//     outlineColor?: Vec4 // Outline color
+//     outlineThickness?: number // Outline thickness in pixels
+// }): void {
+//     const gl = this.gl
+//     const shader = UIKRenderer.boxShader
+//     shader.use(gl)
+
+//     // Get the Device Pixel Ratio (DPR)
+//     const dpr = window.devicePixelRatio || 1
+
+//     // Get canvas bounding rectangle
+//     const rect = (gl.canvas as HTMLCanvasElement).getBoundingClientRect()
+
+//     // Incorporate scroll offsets
+//     const scrollX = window.scrollX || 0
+//     const scrollY = window.scrollY || 0
+
+//     // Scale inputs by DPR
+//     const scaledBoxStart = boxStart //.map(value => value * dpr) as Vec2
+//     const scaledBoxEnd = boxEnd //.map(value => value * dpr) as Vec2
+//     const scaledBoxThickness = boxThickness * dpr
+//     const scaledOutlineThickness = outlineThickness * dpr
+
+//     // Normalize boxStart and boxEnd to NDC
+//     const canvasWidth = rect.width * dpr
+//     const canvasHeight = rect.height * dpr
+//     const canvasLeft = (rect.left + scrollX) * dpr
+//     const canvasTop = (rect.top + scrollY) * dpr
+
+//     const boxStartNDC: Vec2 = [
+//         ((scaledBoxStart[0] - canvasLeft) / canvasWidth) * 2.0 - 1.0,
+//         -(((scaledBoxStart[1] - canvasTop) / canvasHeight) * 2.0 - 1.0) // Y inverted
+//     ]
+//     const boxEndNDC: Vec2 = [
+//         ((scaledBoxEnd[0] - canvasLeft) / canvasWidth) * 2.0 - 1.0,
+//         -(((scaledBoxEnd[1] - canvasTop) / canvasHeight) * 2.0 - 1.0) // Y inverted
+//     ]
+
+//     // Convert boxThickness and outlineThickness to NDC
+//     const boxThicknessNDC = (scaledBoxThickness / canvasHeight) * 2.0
+//     const outlineThicknessNDC = (scaledOutlineThickness / canvasHeight) * 2.0
+
+//     // Pass uniforms to the shader
+//     gl.uniform2f(shader.uniforms.iResolution, canvasWidth, canvasHeight) // Pass scaled resolution
+//     gl.uniform2f(shader.uniforms.boxStart, ...boxStartNDC)
+//     gl.uniform2f(shader.uniforms.boxEnd, ...boxEndNDC)
+//     gl.uniform1f(shader.uniforms.boxThickness, boxThicknessNDC) // Use NDC thickness
+//     gl.uniform1f(shader.uniforms.outlineThickness, outlineThicknessNDC) // Use NDC outline thickness
+//     gl.uniform4fv(shader.uniforms.fillColor, fillColor) // Fill color
+//     gl.uniform4fv(shader.uniforms.outlineColor, outlineColor) // Outline color
+
+//     // Bind and draw the full-screen VAO
+//     gl.bindVertexArray(UIKRenderer.fullScreenVAO)
+//     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+//     gl.bindVertexArray(null)
+// }
+
 
 }

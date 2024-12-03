@@ -94,6 +94,15 @@ draw(): void {
       scale: 1.0, // Scale factor for text
       showTickmarkNumbers: true // Show tickmark numbers
     })
+
+  this.renderer.drawLine({
+    startEnd: [500, 500, 1000, 800],
+    thickness: 5,
+    color: [0, 1, 0, 1], // Green line
+    style: LineStyle.SOLID,
+    terminator: LineTerminator.ARROW
+  })
+  
   }
   
 

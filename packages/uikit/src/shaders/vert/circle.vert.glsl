@@ -4,7 +4,6 @@ layout(location = 0) in vec3 pos;
 
 uniform vec2 canvasWidthHeight;
 uniform vec4 leftTopWidthHeight;
-uniform vec4 uvLeftTopWidthHeight;
 uniform float z;
 
 out vec2 vUV;
