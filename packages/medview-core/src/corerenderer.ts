@@ -1,4 +1,4 @@
-import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle } from '@medview/uikit'
+import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables } from '@medview/uikit'
 const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
 const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
 
@@ -6,8 +6,10 @@ export class CoreRenderer {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
   private renderer: UIKRenderer
-  private defaultFont: UIKFont
+  private defaultFont: UIKFont | null = null
   private hebrewFont: UIKFont | null = null
+  private colorTables: ColorTables = new ColorTables()
+  private colorMap: string = "viridis"; // viridis
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -21,23 +23,32 @@ export class CoreRenderer {
     this.renderer = new UIKRenderer(this.gl)
 
     // Load the default font
-    this.defaultFont = new UIKFont(this.gl)
-    this.defaultFont.loadDefaultFont().then(() => {
-      console.log('Default font loaded successfully')
-      this.hebrewFont = new UIKFont(this.gl)
-      this.hebrewFont.loadFont(fontImage, fontMetrics).then(() => {
-        console.log('Heebo font loaded successfully')
-        this.draw() // Redraw once the font is loaded
-      })
+    // this.defaultFont = new UIKFont(this.gl)
+    // this.defaultFont.loadDefaultFont().then(() => {
+    //   console.log('Default font loaded successfully')
+    //   this.hebrewFont = new UIKFont(this.gl)
+    //   this.hebrewFont.loadFont(fontImage, fontMetrics).then(() => {
+    //     console.log('Heebo font loaded successfully')
+    //     this.draw() // Redraw once the font is loaded
+    //   })
       
-    })
+    // })
+    this.init().then(() => this.draw())
+  }
+
+  async init() {
+    this.defaultFont = new UIKFont(this.gl)
+    await this.defaultFont.loadDefaultFont()
+    this.hebrewFont = new UIKFont(this.gl)
+    await this.hebrewFont.loadFont(fontImage, fontMetrics)
+    await this.colorTables.loadColormaps()
   }
 
   /**
  * Main draw method that demonstrates rendering shapes, rotated text, and a ruler.
  */
 async draw(): Promise<void> {
-    if (!this.defaultFont.isFontLoaded) {
+    if (!this.defaultFont!.isFontLoaded) {
       return
     }
   
@@ -104,7 +115,7 @@ async draw(): Promise<void> {
     // })
 
     this.renderer.drawRotatedText({
-      font: this.defaultFont,
+      font: this.defaultFont!,
       xy: [500, 200],
       str: 'This is a long string that will wrap if it exceeds the maxWidth.',
       scale: 0.5,
@@ -125,6 +136,9 @@ async draw(): Promise<void> {
       rotation: 0,//Math.PI / 6, // 30-degree rotation
       maxWidth: 300 // Wrap to fit within 300px
     })
+    
+    const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
+    this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
   }
   // this.renderer.drawLine({
   //   startEnd: [500, 500, 1000, 800],
