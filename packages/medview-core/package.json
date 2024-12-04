@@ -4,6 +4,7 @@
   "main": "dist/medview-core.cjs.js",
   "module": "dist/medview-core.es.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "test": "vitest run",
     "build:uikit": "npm --prefix ../uikit run build",

@@ -13,8 +13,10 @@
       "esModuleInterop": true, // Enable compatibility with CommonJS modules
       "resolveJsonModule": true,
       "types": [
-        "vite-plugin-glsl/ext"
+        "vite-plugin-glsl/ext",
+        "vite/client"
       ]
     },
-    "include": ["src/**/*", "types"]
+    "include": ["src/**/*", "types"],
+    "exclude": ["types/vite-env.d.ts"] 
   }

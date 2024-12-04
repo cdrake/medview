@@ -937,6 +937,48 @@ export class UIKRenderer {
   }
 
   /**
+   * Draws a color bar with gradient and tick labels.
+   * @param params - Object containing parameters for rendering the color bar.
+   * @param params.font - Font used for rendering labels.
+   * @param params.position - Position of the color bar [x, y].
+   * @param params.size - Size of the color bar [width, height].
+   * @param params.gradientTexture - Texture for gradient if applicable.
+   * @param params.labels - Array of labels for tick marks.
+   */
+  public drawColorbar({
+    position,
+    size,
+    gradientTexture
+  }: {
+    position: Vec2
+    size: Vec2
+    gradientTexture: WebGLTexture
+  }): void {
+    const gl = this.gl
+    const [x, y] = position
+    const [width, height] = size
+
+    // Use the colorbarShader for rendering
+    UIKRenderer.colorbarShader.use(gl)
+
+    // Set up uniforms for the colorbar shader
+    gl.uniform2fv(UIKRenderer.colorbarShader.uniforms.canvasWidthHeight, [gl.canvas.width, gl.canvas.height])
+    gl.uniform4fv(UIKRenderer.colorbarShader.uniforms.leftTopWidthHeight, [x, y, width, height])
+
+    // Bind the gradient texture
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, gradientTexture)
+    gl.uniform1i(UIKRenderer.colorbarShader.uniforms.gradientTexture, 0) // Assumes gradient texture is bound to TEXTURE0
+
+    // Bind VAO and draw color bar rectangle
+    gl.bindVertexArray(UIKRenderer.genericVAO)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    // Unbind texture and VAO after drawing
+    gl.bindTexture(gl.TEXTURE_2D, null)
+    gl.bindVertexArray(null)
+  }
+
+  /**
      * Draw an oriented box using the box shader.
      */
 //   public drawBox({

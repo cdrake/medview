@@ -11,8 +11,10 @@
       "moduleResolution": "node", // Resolve node_modules correctly
       "esModuleInterop": true, // Enable compatibility with CommonJS modules
       "types": [
-        "vite-plugin-glsl/ext"
+        "vite-plugin-glsl/ext",
+        "vite/client"
       ]
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*"],
+    "exclude": ["types/vite-env.d.ts"]
   }

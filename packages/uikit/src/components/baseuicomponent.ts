@@ -11,6 +11,7 @@ export abstract class BaseUIComponent implements IUIComponent {
   alignmentPoint: AlignmentPoint = AlignmentPoint.NONE
   verticalAlignment: VerticalAlignment = VerticalAlignment.NONE
   horizontalAlignment: HorizontalAlignment = HorizontalAlignment.NONE
+  isDraggable: boolean = false
   isVisible: boolean = true
   zIndex: number = 0
   id: string = uuidv4()
@@ -25,10 +26,11 @@ export abstract class BaseUIComponent implements IUIComponent {
   public requestRedraw?: () => void
 
   // Event handlers
-  public onPointerUp?: (event: MouseEvent) => void
-  public onPointerDown?: (event: MouseEvent) => void
-  public onPointerEnter?: (event: MouseEvent) => void
-  public onPointerLeave?: (event: MouseEvent) => void
+  public onPointerUp?: (event: PointerEvent) => void
+  public onPointerDown?: (event: PointerEvent) => void
+  public onPointerEnter?: (event: PointerEvent) => void
+  public onPointerLeave?: (event: PointerEvent) => void
+  public onPointerDrag?: (event: PointerEvent) => void
 
   abstract draw(renderer: UIKRenderer): void
 
