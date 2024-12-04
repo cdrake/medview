@@ -25,7 +25,7 @@ export interface IUIComponent {
   setPosition(position: Vec2): void
   draw(renderer: UIKRenderer): void
   align(bounds: Vec4): void
-
+  isDraggable: boolean
   isVisible: boolean
   zIndex: number
   tags: string[]

@@ -1,8 +1,9 @@
+import glsl from 'vite-plugin-glsl';
 import { defineConfig } from 'vite'
 import path from 'path'
 
 export default defineConfig({
-  assetsInclude: ['**/*.png'], // Ensure Vite includes .png files as assets
+  plugins: [glsl()],
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'), // Entry file
