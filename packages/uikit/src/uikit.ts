@@ -44,7 +44,10 @@ export class UIKit {
   private lastAngle: number = 0
   private lastPanPosition: Vec2 = [-1, -1]
 
-  // Static enum for line terminators
+  private onFileDrop?: (data: DataTransfer) => void
+  private onDragOver?: (event: DragEvent) => void
+
+  // Static enums
   public static lineTerminator = LineTerminator
   public static lineStyle = LineStyle
   public static componentSide = ComponentSide
@@ -115,12 +118,76 @@ export class UIKit {
     canvas.addEventListener('pointerup', this.handlePointerUp.bind(this))
     canvas.addEventListener('pointermove', this.handlePointerMove.bind(this))
     canvas.addEventListener('pointercancel', this.handlePointerCancel.bind(this))
+    // Add event listeners for drag and drop
+    canvas.addEventListener('dragover', this.handleDragOver.bind(this))
+    canvas.addEventListener('dragleave', this.handleDragLeave.bind(this))
+    canvas.addEventListener('drop', this.handleFileDrop.bind(this))
 
     const mqString = `(resolution: ${window.devicePixelRatio}dppx)`
     const media = matchMedia(mqString)
     media.addEventListener('change', this.handleUpdatedPixelRatio.bind(this))
   }
 
+   /**
+   * Set a general-purpose callback for file drop events.
+   * @param callback - A function to receive all dropped files.
+   */
+   public setOnFileDrop(callback: (data: DataTransfer) => void): void {
+    this.onFileDrop = callback
+  }
+
+  /**
+   * Set a callback to handle dragover events.
+   * @param callback - A function to handle dragover events.
+   */
+  public setOnDragOver(callback: (event: DragEvent) => void): void {
+    this.onDragOver = callback
+  }
+
+  /**
+   * Handle drag over event to allow dropping.
+   * @param event - The drag event.
+   */
+  private handleDragOver(event: DragEvent): void {
+    event.preventDefault()
+
+    // Invoke the dragover callback if defined
+    if (this.onDragOver) {
+      this.onDragOver(event)
+    } else {
+      const canvas = this.gl.canvas as HTMLCanvasElement
+      canvas.style.border = '2px dashed #0078d4' // Optional: Add visual feedback
+    }
+  }
+
+  /**
+   * Handle drag leave event to reset styles.
+   * @param event - The drag event.
+   */
+  private handleDragLeave(event: DragEvent): void {
+    event.preventDefault()
+    const canvas = this.gl.canvas as HTMLCanvasElement
+    canvas.style.border = '' // Reset border style
+  }
+
+  /**
+   * Handle file drop event.
+   * @param event - The drop event.
+   */
+  private handleFileDrop(event: DragEvent): void {
+    event.preventDefault()
+    const canvas = this.gl.canvas as HTMLCanvasElement
+    canvas.style.border = '' // Reset border style
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+
+      // Invoke the general-purpose file drop handler, if defined
+      if (this.onFileDrop) {
+        this.onFileDrop(event.dataTransfer)
+      }
+      
+    }
+  }
   /**
    * callback function to handle resize window events, redraws the scene.
    * @internal
