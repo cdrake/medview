@@ -22,27 +22,20 @@ export type LUT = {
 export class ColorTables {
   gamma = 1.0
   version = 0.1
-  cluts: Record<string, ColorMap> = {}
-
-  constructor() {
-    this.loadColormaps().catch((error) => {
-      Log.warn('Failed to load colormaps:', error)
-    })
-  }
+  cluts: Record<string, ColorMap> = {}  
 
   /**
    * Dynamically loads JSON colormaps using import.meta.glob
    */
   async loadColormaps(): Promise<void> {
     // Glob all JSON files in the colormaps directory
-    const modules = import.meta.glob('../colormaps/*.json')
+    const modules = import.meta.glob('./cmaps/*.json')
 
     for (const [path, loadModule] of Object.entries(modules)) {
       try {
         const key = path.split('/').pop()?.replace('.json', '') || 'unknown'
         const cmap = (await loadModule()) as ColorMap // Assert type to ColorMap
         this.addColormap(key, cmap)
-        Log.info(`Successfully loaded colormap: ${key}`)
       } catch (error) {
         Log.warn(`Failed to load colormap from ${path}:`, error)
       }
@@ -235,5 +228,16 @@ export class ColorTables {
     }
 
     return lut
+  }
+
+  generateColorMapTexture(gl: WebGL2RenderingContext, colormapName: string): WebGLTexture {
+    const lut = this.colormap(colormapName, false)
+    const texture = gl.createTexture() as WebGLTexture
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, lut)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+    gl.bindTexture(gl.TEXTURE_2D, null)
+    return texture
   }
 }

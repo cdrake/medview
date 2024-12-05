@@ -20,6 +20,7 @@ import boxFrag from './shaders/frag/box.frag.glsl'
 import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 import { UIKFont } from './assets/uikfont.js'
 import { UIKBitmap } from './assets/uikbitmap.js'
+import { UIKSVG } from './assets/uiksvg.js'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
@@ -79,11 +80,20 @@ export class UIKRenderer {
 
     if (!UIKRenderer.genericVAO) {
       const rectStrip = [
-        1, 1, 0, // Top-right
-        1, 0, 0, // Bottom-right
-        0, 1, 0, // Top-left
-        0, 0, 0  // Bottom-left
+        1,
+        1,
+        0, // Top-right
+        1,
+        0,
+        0, // Bottom-right
+        0,
+        1,
+        0, // Top-left
+        0,
+        0,
+        0 // Bottom-left
       ]
+
       const vao = gl.createVertexArray()!
       const vbo = gl.createBuffer()!
 
@@ -95,7 +105,6 @@ export class UIKRenderer {
       gl.enableVertexAttribArray(0)
       gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0)
 
-      gl.bindVertexArray(null)
       const texCoordData = [
         1.0,
         1.0, // Top-right
@@ -116,7 +125,6 @@ export class UIKRenderer {
       gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0)
 
       gl.bindVertexArray(null) // Unbind VAO when done
-      
 
       UIKRenderer.genericVAO = vao
     }
@@ -880,6 +888,19 @@ export class UIKRenderer {
     }
   }
 
+  logVertexAttribState(gl: WebGL2RenderingContext, index: number): void {
+    console.log(`--- Attribute ${index} ---`)
+    console.log('Enabled:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_ENABLED))
+    console.log('Size:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_SIZE))
+    console.log('Type:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_TYPE))
+    console.log('Normalized:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_NORMALIZED))
+    console.log('Stride:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_STRIDE))
+    console.log('Offset:', gl.getVertexAttribOffset(index, gl.VERTEX_ATTRIB_ARRAY_POINTER))
+    console.log('Buffer:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING))
+    console.log('Divisor:', gl.getVertexAttrib(index, gl.VERTEX_ATTRIB_ARRAY_DIVISOR))
+  }
+  
+
   /**
    * Draws a bitmap on the canvas.
    *
@@ -977,6 +998,49 @@ export class UIKRenderer {
     gl.bindTexture(gl.TEXTURE_2D, null)
     gl.bindVertexArray(null)
   }
+
+  /**
+ * Draws an SVG on the canvas using the generated WebGL texture.
+ *
+ * @param config - Configuration object for rendering the SVG.
+ * @param config.svgAsset - The SVG asset to draw.
+ * @param config.position - The position to draw the SVG ([x, y]).
+ * @param config.scale - The scale factor for the SVG.
+ */
+public drawSVG({ svgAsset, position, scale }: { svgAsset: UIKSVG; position: Vec2; scale: number }): void {
+  if (!svgAsset.getTexture()) {
+    console.error('SVG texture not loaded')
+    return
+  }
+
+  const gl = this.gl
+  const shader = svgAsset.bitmapShader
+  shader.use(gl)
+
+  gl.activeTexture(gl.TEXTURE0)
+  gl.bindTexture(gl.TEXTURE_2D, svgAsset.getTexture())
+
+  gl.uniform1i(shader.uniforms.u_textureLocation, 0)
+
+  // Set canvas size
+  const canvasWidth = gl.canvas.width
+  const canvasHeight = gl.canvas.height
+  gl.uniform2f(shader.uniforms.canvasWidthHeight, canvasWidth, canvasHeight)
+
+  // Set the position and size of the SVG
+  const pos = Array.isArray(position) ? vec2.fromValues(position[0], position[1]) : position
+  const width = svgAsset.getWidth() * scale
+  const height = svgAsset.getHeight() * scale
+  gl.uniform4f(shader.uniforms.leftTopWidthHeight, pos[0], pos[1], width, height)
+
+  // Bind the VAO and draw the SVG
+  gl.bindVertexArray(UIKRenderer.genericVAO)
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+
+  // Unbind the VAO
+  gl.bindVertexArray(null)
+}
+
 
   /**
      * Draw an oriented box using the box shader.

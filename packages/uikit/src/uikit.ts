@@ -39,8 +39,15 @@ export class UIKit {
 
   private resizeObserver: ResizeObserver
   private lastClickTime: DOMHighResTimeStamp = 0
+  private activePointers: Map<number, Vec2> = new Map()
+  private lastDistance: number = 0
+  private lastAngle: number = 0
+  private lastPanPosition: Vec2 = [-1, -1]
 
-  // Static enum for line terminators
+  private onFileDrop?: (data: DataTransfer) => void
+  private onDragOver?: (event: DragEvent) => void
+
+  // Static enums
   public static lineTerminator = LineTerminator
   public static lineStyle = LineStyle
   public static componentSide = ComponentSide
@@ -110,12 +117,77 @@ export class UIKit {
     canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this))
     canvas.addEventListener('pointerup', this.handlePointerUp.bind(this))
     canvas.addEventListener('pointermove', this.handlePointerMove.bind(this))
+    canvas.addEventListener('pointercancel', this.handlePointerCancel.bind(this))
+    // Add event listeners for drag and drop
+    canvas.addEventListener('dragover', this.handleDragOver.bind(this))
+    canvas.addEventListener('dragleave', this.handleDragLeave.bind(this))
+    canvas.addEventListener('drop', this.handleFileDrop.bind(this))
 
     const mqString = `(resolution: ${window.devicePixelRatio}dppx)`
     const media = matchMedia(mqString)
     media.addEventListener('change', this.handleUpdatedPixelRatio.bind(this))
   }
 
+   /**
+   * Set a general-purpose callback for file drop events.
+   * @param callback - A function to receive all dropped files.
+   */
+   public setOnFileDrop(callback: (data: DataTransfer) => void): void {
+    this.onFileDrop = callback
+  }
+
+  /**
+   * Set a callback to handle dragover events.
+   * @param callback - A function to handle dragover events.
+   */
+  public setOnDragOver(callback: (event: DragEvent) => void): void {
+    this.onDragOver = callback
+  }
+
+  /**
+   * Handle drag over event to allow dropping.
+   * @param event - The drag event.
+   */
+  private handleDragOver(event: DragEvent): void {
+    event.preventDefault()
+
+    // Invoke the dragover callback if defined
+    if (this.onDragOver) {
+      this.onDragOver(event)
+    } else {
+      const canvas = this.gl.canvas as HTMLCanvasElement
+      canvas.style.border = '2px dashed #0078d4' // Optional: Add visual feedback
+    }
+  }
+
+  /**
+   * Handle drag leave event to reset styles.
+   * @param event - The drag event.
+   */
+  private handleDragLeave(event: DragEvent): void {
+    event.preventDefault()
+    const canvas = this.gl.canvas as HTMLCanvasElement
+    canvas.style.border = '' // Reset border style
+  }
+
+  /**
+   * Handle file drop event.
+   * @param event - The drop event.
+   */
+  private handleFileDrop(event: DragEvent): void {
+    event.preventDefault()
+    const canvas = this.gl.canvas as HTMLCanvasElement
+    canvas.style.border = '' // Reset border style
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+
+      // Invoke the general-purpose file drop handler, if defined
+      if (this.onFileDrop) {
+        this.onFileDrop(event.dataTransfer)
+      }
+      
+    }
+  }
   /**
    * callback function to handle resize window events, redraws the scene.
    * @internal
@@ -294,6 +366,7 @@ export class UIKit {
   private handlePointerDown(event: PointerEvent): void {
     const pos = this.getCanvasRelativePosition(event)
     if (pos) {
+      this.activePointers.set(event.pointerId, [pos.x, pos.y])
       this.processPointerDown(pos.x, pos.y, event)
     }
   }
@@ -310,15 +383,76 @@ export class UIKit {
         this.processPointerUp(pos.x, pos.y, event)
       }
       this.lastClickTime = currentClickTime
+      this.activePointers.delete(event.pointerId)
     }
+  }
+
+  private handlePointerCancel(event: PointerEvent): void {
+    this.activePointers.delete(event.pointerId)
   }
 
   // Handler for pointer move events
   private handlePointerMove(event: PointerEvent): void {
     const pos = this.getCanvasRelativePosition(event)
     if (pos) {
+      this.activePointers.set(event.pointerId, [pos.x, pos.y])
       this.processPointerMove(pos.x, pos.y, event)
+      this.detectGestures()
     }
+  }
+
+  private detectGestures(): void {
+    const pointers = Array.from(this.activePointers.values()) as Vec2[]
+    if (pointers.length === 2) {
+      this.detectPinchOrRotate(pointers as [Vec2, Vec2])
+    } else if (pointers.length === 1) {
+      // Handle single-touch gestures like pan
+      this.detectPan(pointers[0])
+    }
+  }
+
+  private detectPinchOrRotate([p1, p2]: [Vec2, Vec2]): void {
+    const dx = p2[0] - p1[0]
+    const dy = p2[1] - p1[1]
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    if (this.lastDistance != null) {
+      const zoomDelta = distance - this.lastDistance
+      this.handleZoom(zoomDelta)
+    }
+    this.lastDistance = distance
+
+    const angle = Math.atan2(dy, dx)
+    if (this.lastAngle != null) {
+      const rotationDelta = angle - this.lastAngle
+      this.handleRotate(rotationDelta)
+    }
+    this.lastAngle = angle
+  }
+
+  private detectPan([x, y]: Vec2): void {
+    if (this.lastPanPosition) {
+      const dx = x - this.lastPanPosition[0]
+      const dy = y - this.lastPanPosition[1]
+      this.handlePan(dx, dy)
+    }
+    this.lastPanPosition = [x, y]
+  }
+
+  // Gesture handlers to be customized
+  private handleZoom(delta: number): void {
+    console.log('Zoom delta:', delta)
+    // Add your zoom logic here
+  }
+
+  private handleRotate(delta: number): void {
+    console.log('Rotation delta:', delta)
+    // Add your rotation logic here
+  }
+
+  private handlePan(dx: number, dy: number): void {
+    console.log('Pan delta:', dx, dy)
+    // Add your pan logic here
   }
 
   // Utility method to calculate position relative to the canvas
