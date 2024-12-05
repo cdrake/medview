@@ -1,4 +1,4 @@
-import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables } from '@medview/uikit'
+import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap } from '@medview/uikit'
 const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
 const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
 
@@ -10,6 +10,8 @@ export class CoreRenderer {
   private hebrewFont: UIKFont | null = null
   private colorTables: ColorTables = new ColorTables()
   private colorMap: string = "viridis"; // viridis
+  private paperClip: UIKSVG | null = null
+  private bitmap: UIKBitmap | null = null
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -42,6 +44,10 @@ export class CoreRenderer {
     this.hebrewFont = new UIKFont(this.gl)
     await this.hebrewFont.loadFont(fontImage, fontMetrics)
     await this.colorTables.loadColormaps()
+    this.paperClip = new UIKSVG(this.gl)
+    await this.paperClip.loadSVG('/svg/paper-clip.svg')
+    this.bitmap = new UIKBitmap(this.gl)
+    await this.bitmap.loadBitmap('/images/rorden.png')
   }
 
   /**
@@ -53,7 +59,7 @@ async draw(): Promise<void> {
     }
   
     // Clear the canvas with a black background
-    this.clear([0, 0, 0, 1])
+    this.clear([1, 1, 1, 1])
   
     // Draw a triangle
     // this.renderer.drawTriangle({
@@ -114,32 +120,35 @@ async draw(): Promise<void> {
     //   showTickmarkNumbers: true // Show tickmark numbers
     // })
 
-    this.renderer.drawRotatedText({
-      font: this.defaultFont!,
-      xy: [500, 200],
-      str: 'This is a long string that will wrap if it exceeds the maxWidth.',
-      scale: 0.5,
-      color: [1, 1, 1, 1],
-      outlineColor: [0.25, 0.25, 1, 1],
-      rotation: Math.PI / 6, // 30-degree rotation
-      maxWidth: 300 // Wrap to fit within 300px
-    })
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [500, 200],
+    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+    //   scale: 0.5,
+    //   color: [1, 1, 1, 1],
+    //   outlineColor: [0.25, 0.25, 1, 1],
+    //   rotation: Math.PI / 6, // 30-degree rotation
+    //   maxWidth: 300 // Wrap to fit within 300px
+    // })
 
-    if(this.hebrewFont) {
-    this.renderer.drawRotatedText({
-      font: this.hebrewFont,
-      xy: [800, 500],
-      str: 'שָׁלוֹם עֲלֵיכֶם',
-      scale: 0.5,
-      color: [1, 1, 1, 1],
-      outlineColor: [0.25, 0.25, 1, 1],
-      rotation: 0,//Math.PI / 6, // 30-degree rotation
-      maxWidth: 300 // Wrap to fit within 300px
-    })
-    
-    const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
-    this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
-  }
+    // if(this.hebrewFont) {
+    // this.renderer.drawRotatedText({
+    //   font: this.hebrewFont,
+    //   xy: [800, 500],
+    //   str: 'שָׁלוֹם עֲלֵיכֶם',
+    //   scale: 0.5,
+    //   color: [1, 1, 1, 1],
+    //   outlineColor: [0.25, 0.25, 1, 1],
+    //   rotation: 0,//Math.PI / 6, // 30-degree rotation
+    //   maxWidth: 300 // Wrap to fit within 300px
+    // })
+    // }
+    // const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
+    // this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
+
+    this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
+    this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
+  
   // this.renderer.drawLine({
   //   startEnd: [500, 500, 1000, 800],
   //   thickness: 5,

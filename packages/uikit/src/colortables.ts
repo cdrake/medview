@@ -22,13 +22,7 @@ export type LUT = {
 export class ColorTables {
   gamma = 1.0
   version = 0.1
-  cluts: Record<string, ColorMap> = {}
-
-  // constructor() {
-  //   // this.loadColormaps().catch((error) => {
-  //   //   Log.warn('Failed to load colormaps:', error)
-  //   // })
-  // }
+  cluts: Record<string, ColorMap> = {}  
 
   /**
    * Dynamically loads JSON colormaps using import.meta.glob
@@ -42,7 +36,6 @@ export class ColorTables {
         const key = path.split('/').pop()?.replace('.json', '') || 'unknown'
         const cmap = (await loadModule()) as ColorMap // Assert type to ColorMap
         this.addColormap(key, cmap)
-        Log.info(`Successfully loaded colormap: ${key}`)
       } catch (error) {
         Log.warn(`Failed to load colormap from ${path}:`, error)
       }

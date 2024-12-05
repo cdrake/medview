@@ -19,5 +19,6 @@ void main(void) {
   gl_Position = vec4(frac, 0.0, 1.0);
   
   // Pass texture coordinates
-  v_texcoord = vec2(a_texcoord.x, a_texcoord.y);
+  // v_texcoord = vec2(a_texcoord.x, a_texcoord.y);
+  v_texcoord = vec2(a_texcoord.x, 1.0 - a_texcoord.y);
 }
