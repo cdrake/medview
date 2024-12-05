@@ -106,19 +106,19 @@ async draw(): Promise<void> {
     // })
   
     // // Draw a ruler
-    // this.renderer.drawRuler({
-    //   pointA: [300, 500], // Starting point of the ruler
-    //   pointB: [600, 500], // Ending point of the ruler
-    //   length: 30.5, // Length value to display
-    //   units: 'cm', // Units to display
-    //   font: this.defaultFont, // Font for text
-    //   textColor: [1, 0, 0, 1], // Red text
-    //   lineColor: [1, 1, 1, 1], // Black ruler lines
-    //   lineThickness: 2, // Thickness of the lines
-    //   offset: 50, // Offset distance for parallel line and text
-    //   scale: 1.0, // Scale factor for text
-    //   showTickmarkNumbers: true // Show tickmark numbers
-    // })
+    this.renderer.drawRuler({
+      pointA: [300, 500], // Starting point of the ruler
+      pointB: [600, 500], // Ending point of the ruler
+      length: 30.5, // Length value to display
+      units: 'cm', // Units to display
+      font: this.defaultFont!, // Font for text
+      textColor: [1, 0, 0, 1], // Red text
+      lineColor: [0.5, 0.5, 1, 1], // Black ruler lines
+      lineThickness: 2, // Thickness of the lines
+      offset: 50, // Offset distance for parallel line and text
+      scale: 1.0, // Scale factor for text
+      showTickmarkNumbers: true // Show tickmark numbers
+    })
 
     // this.renderer.drawRotatedText({
     //   font: this.defaultFont!,

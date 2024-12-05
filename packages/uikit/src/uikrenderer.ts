@@ -21,6 +21,8 @@ import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 import { UIKFont } from './assets/uikfont.js'
 import { UIKBitmap } from './assets/uikbitmap.js'
 import { UIKSVG } from './assets/uiksvg.js'
+import { ToggleComponent } from './components/togglecomponent.js'
+import { RulerComponent } from './components/rulercomponent.js'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
@@ -468,108 +470,6 @@ export class UIKRenderer {
    * @param params.outlineColor - The outline color of the text. Defaults to black.
    * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
    */
-  // public drawRotatedText({
-  //   font,
-  //   xy,
-  //   str,
-  //   scale = 1.0,
-  //   color = [1.0, 0.0, 0.0, 1.0],
-  //   rotation = 0.0,
-  //   outlineColor = [0, 0, 0, 1.0],
-  //   outlineThickness = 2
-  // }: {
-  //   font: UIKFont
-  //   xy: Vec2
-  //   str: string
-  //   scale?: number
-  //   color?: Color
-  //   rotation?: number
-  //   outlineColor?: Color
-  //   outlineThickness?: number
-  // }): void {
-  //   if (!font.isFontLoaded) {
-  //     console.error('font not loaded')
-  //     return
-  //   }
-
-  //   if (!UIKRenderer.rotatedFontShader) {
-  //     throw new Error('rotatedTextShader undefined')
-  //   }
-
-  //   const rotatedFontShader = UIKRenderer.rotatedFontShader
-  //   const gl = this.gl
-
-  //   // Bind the font texture
-  //   gl.activeTexture(gl.TEXTURE0)
-  //   gl.bindTexture(gl.TEXTURE_2D, font.getTexture())
-
-  //   rotatedFontShader.use(gl)
-
-  //   // Enable blending for text rendering
-  //   gl.enable(gl.BLEND)
-  //   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-  //   gl.disable(gl.DEPTH_TEST) // TODO: remove
-  //   gl.disable(gl.CULL_FACE)
-
-  //   // Set uniform values
-  //   const finalColor = color || font.fontColor
-  //   gl.uniform4fv(rotatedFontShader.uniforms.fontColor, finalColor as Float32List)
-  //   let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
-  //   screenPxRange = Math.max(screenPxRange, 1.0) // screenPxRange must never be lower than 1
-  //   gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
-  //   gl.uniform1i(rotatedFontShader.uniforms.fontTexture, 0)
-
-  //   // Outline uniforms
-  //   gl.uniform4fv(rotatedFontShader.uniforms.outlineColor, outlineColor as Float32List)
-  //   gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, outlineThickness)
-
-  //   // Bind VAO for generic rectangle
-  //   gl.bindVertexArray(UIKRenderer.genericVAO)
-
-  //   // Set up orthographic projection matrix
-  //   const orthoMatrix = mat4.create()
-  //   mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
-
-  //   // Iterate over each character in the string
-  //   let x = xy[0]
-  //   let y = xy[1]
-
-  //   const size = font.textHeight * Math.min(gl.canvas.height, gl.canvas.width) * scale
-  //   const chars = Array.from(str)
-  //   for (const char of chars) {
-  //     const metrics = font.fontMets!.mets[char]
-  //     if (!metrics) {
-  //       continue
-  //     }
-
-  //     const modelMatrix = mat4.create()
-  //     mat4.translate(modelMatrix, modelMatrix, [
-  //       x + Math.sin(rotation) * metrics.lbwh[1] * size,
-  //       y - Math.cos(rotation) * metrics.lbwh[1] * size,
-  //       0.0
-  //     ])
-  //     mat4.rotateZ(modelMatrix, modelMatrix, rotation)
-  //     mat4.scale(modelMatrix, modelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
-
-  //     // Combine the orthographic matrix with the model matrix to create the final MVP matrix
-  //     const mvpMatrix = mat4.create()
-  //     mat4.multiply(mvpMatrix, orthoMatrix, modelMatrix)
-
-  //     // Set uniform values for MVP matrix and UV coordinates
-  //     gl.uniformMatrix4fv(rotatedFontShader.uniforms.modelViewProjectionMatrix, false, mvpMatrix)
-  //     gl.uniform4fv(rotatedFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
-  //     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-
-  //     // Update x position for the next character, advancing with rotation in mind
-  //     const advanceX = Math.cos(rotation) * metrics.xadv * size
-  //     const advanceY = Math.sin(rotation) * metrics.xadv * size
-  //     x += advanceX
-  //     y += advanceY
-  //   }
-
-  //   // Unbind the VAO
-  //   gl.bindVertexArray(null)
-  // }  
   public drawRotatedText({
     font,
     xy,
@@ -799,139 +699,8 @@ export class UIKRenderer {
     offset?: number
     scale?: number
     showTickmarkNumbers?: boolean
-  }): void {
-    // Calculate the angle between the points
-    const deltaX = pointB[0] - pointA[0]
-    const deltaY = pointB[1] - pointA[1]
-    const actualLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-    let angle = Math.atan2(deltaY, deltaX)
-
-    // Calculate the midpoint
-    const midPoint: Vec2 = [(pointA[0] + pointB[0]) / 2, (pointA[1] + pointB[1]) / 2]
-
-    // Format the length text
-    const text = `${length.toFixed(2)}`
-
-    // Adjust the text position to ensure it's centered above the parallel line
-    const textWidth = font.getTextWidth(text, scale)
-    const textHeight = font.getTextHeight(text, scale)
-    const halfTextWidth = textWidth / 2
-    const halfTextHeight = textHeight / 2
-    let textPosition: Vec2 = [
-      midPoint[0] - halfTextWidth * Math.cos(angle) + (halfTextHeight + offset) * Math.sin(angle),
-      midPoint[1] - halfTextWidth * Math.sin(angle) - (halfTextHeight + offset) * Math.cos(angle)
-    ]
-
-    // Ensure text is not upside down
-    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-      angle += Math.PI
-      textPosition = [
-        midPoint[0] -
-          (textWidth / 2) * Math.cos(angle) -
-          (textHeight / 2 + offset) * Math.sin(angle) -
-          offset * Math.sin(angle),
-        midPoint[1] -
-          (textWidth / 2) * Math.sin(angle) +
-          (textHeight / 2 + offset) * Math.cos(angle) +
-          offset * Math.cos(angle)
-      ]
-    }
-
-    // Draw the rotated length text at the adjusted position
-    this.drawRotatedText({ font, xy: textPosition, str: text, scale, color: textColor, outlineColor, rotation: angle })
-
-    // Draw the units at half the requested scale
-    const unitsScale = scale / 2
-    const unitsTextWidth = font.getTextWidth(units, unitsScale)
-    const unitsTextPosition: Vec2 = [
-      textPosition[0] + (textWidth + unitsTextWidth / 4) * Math.cos(angle),
-      textPosition[1] + (textWidth + unitsTextWidth / 4) * Math.sin(angle)
-    ]
-    this.drawRotatedText({
-      font,
-      xy: unitsTextPosition,
-      str: units,
-      scale: unitsScale,
-      color: textColor,
-      outlineColor,
-      rotation: angle
-    })
-
-    // Draw a parallel line of equal length to the original line
-    const parallelPointA: Vec2 = [
-      pointA[0] + (offset * deltaY) / actualLength,
-      pointA[1] - (offset * deltaX) / actualLength
-    ]
-    const parallelPointB: Vec2 = [
-      pointB[0] + (offset * deltaY) / actualLength,
-      pointB[1] - (offset * deltaX) / actualLength
-    ]
-    this.drawLine({
-      startEnd: [parallelPointA[0], parallelPointA[1], parallelPointB[0], parallelPointB[1]],
-      thickness: lineThickness,
-      color: lineColor
-    })
-
-    // Draw lines terminating in arrows from the ends of the parallel line to points A and B
-    this.drawLine({
-      startEnd: [parallelPointA[0], parallelPointA[1], pointA[0], pointA[1]],
-      thickness: lineThickness,
-      color: lineColor,
-      terminator: LineTerminator.ARROW
-    })
-    this.drawLine({
-      startEnd: [parallelPointB[0], parallelPointB[1], pointB[0], pointB[1]],
-      thickness: lineThickness,
-      color: lineColor,
-      terminator: LineTerminator.ARROW
-    })
-
-    // Draw perpendicular hash marks like a ruler
-    const numHashMarks = Math.floor(length)
-    const hashLength = 8
-    const parallelOffset = offset / 4
-
-    for (let i = 1; i <= numHashMarks; i++) {
-      const t = i / length
-      const hashPoint: Vec2 = [pointA[0] + t * deltaX, pointA[1] + t * deltaY]
-      const currentHashLength = i % 5 === 0 ? hashLength * 2 : hashLength
-      const perpOffsetX = (deltaY / actualLength) * parallelOffset
-      const perpOffsetY = (-deltaX / actualLength) * parallelOffset
-
-      if (i % 5 === 0) {
-        const hashText = `${i}`
-        const hashTextScale = scale / 5
-        const hashTextWidth = font.getTextWidth(hashText, hashTextScale)
-        const hashTextPosition: Vec2 = [
-          hashPoint[0] +
-            perpOffsetX -
-            (hashTextWidth / 2) * Math.cos(angle) +
-            (currentHashLength / 4) * Math.sin(angle),
-          hashPoint[1] + perpOffsetY - (hashTextWidth / 2) * Math.sin(angle) - (currentHashLength / 4) * Math.cos(angle)
-        ]
-        if (showTickmarkNumbers) {
-          this.drawRotatedText({
-            font,
-            xy: hashTextPosition,
-            str: hashText,
-            scale: hashTextScale,
-            color: textColor,
-            outlineColor,
-            rotation: angle
-          })
-        }
-      }
-
-      const hashStart: Vec2 = [
-        hashPoint[0] + perpOffsetX - (currentHashLength / 2) * Math.cos(angle + Math.PI / 2),
-        hashPoint[1] + perpOffsetY - (currentHashLength / 2) * Math.sin(angle + Math.PI / 2)
-      ]
-      const hashEnd: Vec2 = [
-        hashPoint[0] + perpOffsetX + (currentHashLength / 2) * Math.cos(angle + Math.PI / 2),
-        hashPoint[1] + perpOffsetY + (currentHashLength / 2) * Math.sin(angle + Math.PI / 2)
-      ]
-      this.drawLine({ startEnd: [hashStart[0], hashStart[1], hashEnd[0], hashEnd[1]], thickness: 1, color: lineColor })
-    }
+  }): void {    
+    RulerComponent.drawRuler({renderer: this, pointA, pointB, length, units, font, textColor, outlineColor, lineColor, lineThickness, offset, scale, showTickmarkNumbers})
   }
 
   logVertexAttribState(gl: WebGL2RenderingContext, index: number): void {
@@ -1111,42 +880,8 @@ public drawToggle({
   onColor: Color
   offColor: Color
   knobPosition?: number
-}): void {
-  // Handle Vec2 types to ensure compatibility with both gl-matrix vec2 and [number, number]
-  const posX = Array.isArray(position) ? position[0] : position[0]
-  const posY = Array.isArray(position) ? position[1] : position[1]
-  const sizeX = Array.isArray(size) ? size[0] : size[0]
-  const sizeY = Array.isArray(size) ? size[1] : size[1]
-
-  const cornerRadius = sizeY / 2 // Height is used for radius
-
-  // Ensure the colors are Float32Array
-  const fillColor = new Float32Array(isOn ? onColor : offColor)
-
-  // Draw the background rounded rectangle
-  this.drawRoundedRect({
-    bounds: [posX, posY, sizeX, sizeY],
-    fillColor,
-    outlineColor: new Float32Array([0.2, 0.2, 0.2, 1.0]), // Outline color
-    cornerRadius,
-    thickness: 2.0 // Outline thickness
-  })
-
-  // Clamp knobPosition between 0 and 1
-  knobPosition = Math.max(0, Math.min(1, knobPosition))
-
-  // Calculate the circle (toggle knob) position based on the knobPosition
-  const knobSize = sizeY * 0.8
-  const offX = posX + (sizeY - knobSize) / 2
-  const onX = posX + sizeX - knobSize - (sizeY - knobSize) / 2
-  const knobX = offX + (onX - offX) * knobPosition
-  const knobY = posY + (sizeY - knobSize) / 2
-
-  // Draw the toggle knob as a circle
-  this.drawCircle({
-    leftTopWidthHeight: [knobX, knobY, knobSize, knobSize],
-    circleColor: new Float32Array([1.0, 1.0, 1.0, 1.0])
-  })
+}): void {  
+  ToggleComponent.drawToggle({renderer: this, position, size, isOn, onColor, offColor, knobPosition})
 }
 
   /**
