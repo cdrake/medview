@@ -712,6 +712,52 @@ export class UIKRenderer {
     gl.bindVertexArray(null)
   }
   
+  /**
+   * Draws a rounded rectangle.
+   * @param leftTopWidthHeight - The bounding box of the rounded rectangle (left, top, width, height).
+   * @param fillColor - The fill color of the rectangle.
+   * @param outlineColor - The outline color of the rectangle.
+   * @param cornerRadius - The corner radius.
+   * @param thickness - The thickness of the outline.
+   */
+  public drawRoundedRect(config: {
+    bounds: Vec4
+    fillColor: Color
+    outlineColor: Color
+    cornerRadius?: number
+    thickness?: number
+  }): void {
+    const { bounds, fillColor, outlineColor, cornerRadius = -1, thickness = 10 } = config
+
+    if (!UIKRenderer.roundedRectShader) {
+      throw new Error('roundedRectShader undefined')
+    }
+
+    const gl = this.gl
+
+    // Use the rounded rectangle shader program
+    UIKRenderer.roundedRectShader.use(gl)
+
+    // Enable blending for transparency
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+    // Set the necessary uniforms
+    const shader = UIKRenderer.roundedRectShader
+    const adjustedCornerRadius = cornerRadius === -1 ? thickness * 2 : cornerRadius
+
+    const rectParams = Array.isArray(bounds) ? vec4.fromValues(bounds[0], bounds[1], bounds[2], bounds[3]) : bounds
+
+    this.gl.uniform1f(shader.uniforms.thickness, thickness)
+    this.gl.uniform1f(shader.uniforms.cornerRadius, adjustedCornerRadius)
+    this.gl.uniform4fv(shader.uniforms.borderColor, outlineColor as Float32List)
+    this.gl.uniform4fv(shader.uniforms.fillColor, fillColor as Float32List)
+    this.gl.uniform2fv(shader.uniforms.canvasWidthHeight, [this.gl.canvas.width, this.gl.canvas.height])
+    this.gl.uniform4fv(shader.uniforms.leftTopWidthHeight, rectParams as Float32List)
+    this.gl.bindVertexArray(UIKRenderer.genericVAO)
+    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
+    this.gl.bindVertexArray(null)
+  }
   
   /**
    * Draws a ruler with length text, units, and hash marks.
@@ -1041,6 +1087,67 @@ public drawSVG({ svgAsset, position, scale }: { svgAsset: UIKSVG; position: Vec2
   gl.bindVertexArray(null)
 }
 
+/**
+   * Draws a toggle switch with support for an animated knob position.
+   * @param params - Object containing the toggle parameters.
+   * @param params.position - The position of the top-left corner of the toggle.
+   * @param params.size - The size of the toggle ([width, height]).
+   * @param params.isOn - Whether the toggle is on or off.
+   * @param params.onColor - The color when the toggle is on.
+   * @param params.offColor - The color when the toggle is off.
+   * @param params.knobPosition - The position of the knob (0 for off, 1 for on, values in between for animation).
+   */
+public drawToggle({
+  position,
+  size,
+  isOn,
+  onColor,
+  offColor,
+  knobPosition = isOn ? 1.0 : 0.0 // Default to fully on or off
+}: {
+  position: Vec2
+  size: Vec2
+  isOn: boolean
+  onColor: Color
+  offColor: Color
+  knobPosition?: number
+}): void {
+  // Handle Vec2 types to ensure compatibility with both gl-matrix vec2 and [number, number]
+  const posX = Array.isArray(position) ? position[0] : position[0]
+  const posY = Array.isArray(position) ? position[1] : position[1]
+  const sizeX = Array.isArray(size) ? size[0] : size[0]
+  const sizeY = Array.isArray(size) ? size[1] : size[1]
+
+  const cornerRadius = sizeY / 2 // Height is used for radius
+
+  // Ensure the colors are Float32Array
+  const fillColor = new Float32Array(isOn ? onColor : offColor)
+
+  // Draw the background rounded rectangle
+  this.drawRoundedRect({
+    bounds: [posX, posY, sizeX, sizeY],
+    fillColor,
+    outlineColor: new Float32Array([0.2, 0.2, 0.2, 1.0]), // Outline color
+    cornerRadius,
+    thickness: 2.0 // Outline thickness
+  })
+
+  // Clamp knobPosition between 0 and 1
+  knobPosition = Math.max(0, Math.min(1, knobPosition))
+
+  // Calculate the circle (toggle knob) position based on the knobPosition
+  const knobSize = sizeY * 0.8
+  const offX = posX + (sizeY - knobSize) / 2
+  const onX = posX + sizeX - knobSize - (sizeY - knobSize) / 2
+  const knobX = offX + (onX - offX) * knobPosition
+  const knobY = posY + (sizeY - knobSize) / 2
+
+  // Draw the toggle knob as a circle
+  this.drawCircle({
+    leftTopWidthHeight: [knobX, knobY, knobSize, knobSize],
+    circleColor: new Float32Array([1.0, 1.0, 1.0, 1.0])
+  })
+}
 
   /**
      * Draw an oriented box using the box shader.

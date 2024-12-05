@@ -148,7 +148,7 @@ async draw(): Promise<void> {
 
     this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
     this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
-  
+    this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})
   // this.renderer.drawLine({
   //   startEnd: [500, 500, 1000, 800],
   //   thickness: 5,
