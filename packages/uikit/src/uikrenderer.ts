@@ -549,19 +549,27 @@ public drawCircle({
     gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.CULL_FACE)
   
-    // Set uniform values
+    // Set uniforms
     const finalColor = color || font.fontColor
     gl.uniform4fv(rotatedFontShader.uniforms.fontColor, finalColor as Float32List)
-    let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
-    screenPxRange = Math.max(screenPxRange, 1.0) // screenPxRange must never be lower than 1
-    gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
-    gl.uniform1i(rotatedFontShader.uniforms.fontTexture, 0)
-  
-    // Outline uniforms
     gl.uniform4fv(rotatedFontShader.uniforms.outlineColor, outlineColor as Float32List)
-    gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, outlineThickness)
   
-    // Bind VAO for generic rectangle
+    // Calculate screen pixel range
+    let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
+    screenPxRange *= window.devicePixelRatio || 1.0 // Adjust for DPR
+    gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
+  
+    // Convert outline thickness to NDC, considering DPR
+    const ndcOutlineThickness = outlineThickness / (gl.canvas.width * (window.devicePixelRatio || 1.0))
+    gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, ndcOutlineThickness)
+  
+    // Pass canvas dimensions for proper scaling
+    gl.uniform2fv(rotatedFontShader.uniforms.canvasWidthHeight, [
+      gl.canvas.width * (window.devicePixelRatio || 1.0),
+      gl.canvas.height * (window.devicePixelRatio || 1.0)
+    ])
+  
+    // Bind VAO for the generic rectangle
     gl.bindVertexArray(UIKRenderer.genericVAO)
   
     // Set up orthographic projection matrix
@@ -593,6 +601,7 @@ public drawCircle({
     }
   
     // Adjust line height to include outline thickness
+    outlineThickness = 0;
     const lineHeight = font.getTextHeight(str, scale) + outlineThickness * scale
   
     // Calculate perpendicular offset for each line

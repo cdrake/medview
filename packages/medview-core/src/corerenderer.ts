@@ -93,17 +93,17 @@ async draw(): Promise<void> {
     //   color: [1, 1, 0, 1] // Yellow triangle
     // })
   
-    // // Draw rotated text
-    this.renderer.drawRotatedText({
-      font: this.defaultFont!,
-      xy: [100, 300], // Starting position of the text
-      str: 'Hello, MedView!', // The string to render
-      scale: 0.50, // Scale factor
-      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-      outlineColor: [0, 0, 0, 1], // Outline color (black)
-      outlineThickness: 2 // Outline thickness
-    })
+    // // // Draw rotated text
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [100, 300], // Starting position of the text
+    //   str: 'Hello, MedView!', // The string to render
+    //   scale: 0.50, // Scale factor
+    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+    //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
+    //   outlineThickness: 2 // Outline thickness
+    // })
   
     // // Draw a ruler
     this.renderer.drawRuler({
@@ -113,23 +113,23 @@ async draw(): Promise<void> {
       units: 'cm', // Units to display
       font: this.defaultFont!, // Font for text
       textColor: [1, 0, 0, 1], // Red text
-      lineColor: [0.5, 0.5, 1, 1], // Black ruler lines
+      lineColor: [0, 0, 0, 1], // Black ruler lines
       lineThickness: 2, // Thickness of the lines
       offset: 50, // Offset distance for parallel line and text
       scale: 1.0, // Scale factor for text
       showTickmarkNumbers: true // Show tickmark numbers
     })
 
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont!,
-    //   xy: [500, 200],
-    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
-    //   scale: 0.5,
-    //   color: [1, 1, 1, 1],
-    //   outlineColor: [0.25, 0.25, 1, 1],
-    //   rotation: Math.PI / 6, // 30-degree rotation
-    //   maxWidth: 300 // Wrap to fit within 300px
-    // })
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [500, 200],
+      str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+      scale: 0.5,
+      color: [1, 1, 1, 1],
+      outlineColor: [0.25, 0.25, 1, 1],
+      rotation: Math.PI / 6, // 30-degree rotation
+      maxWidth: 300 // Wrap to fit within 300px
+    })
 
     // if(this.hebrewFont) {
     // this.renderer.drawRotatedText({
