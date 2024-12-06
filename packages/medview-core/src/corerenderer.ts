@@ -61,121 +61,54 @@ async draw(): Promise<void> {
     // Clear the canvas with a black background
     this.clear([0.5, 0.5, 0.5, 1])
   
-    // Draw a triangle
-    // this.renderer.drawTriangle({
-    //   headPoint: [100, 600],
-    //   baseMidPoint: [100, 800],
-    //   baseLength: 200,
-    //   color: [1, 0, 0, 1] // Red triangle
-    // })
-  
-    // // Draw a circle
-    // this.renderer.drawCircle({
-    //   leftTopWidthHeight: [250, 700, 150, 150],
-    //   circleColor: [0, 0, 1, 1], // Blue circle
-    //   fillPercent: 1.0
-    // })
-  
-    // // Draw a line
-    // this.renderer.drawLine({
-    //   startEnd: [200, 800, 600, 610],
-    //   thickness: 5,
-    //   color: [0, 1, 0, 1], // Green line
-    //   style: LineStyle.SOLID,
-    //   terminator: LineTerminator.ARROW
-    // })
-  
-    // // Draw another triangle
-    // this.renderer.drawTriangle({
-    //   headPoint: [500, 600],
-    //   baseMidPoint: [500, 800],
-    //   baseLength: 200,
-    //   color: [1, 1, 0, 1] // Yellow triangle
-    // })
-  
-    // // // Draw rotated text
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont!,
-    //   xy: [100, 300], // Starting position of the text
-    //   str: 'Hello, MedView!', // The string to render
-    //   scale: 0.50, // Scale factor
-    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-    //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
-    //   outlineThickness: 2 // Outline thickness
-    // })
-  
-    // // Draw a ruler
-    this.renderer.drawRuler({
-      pointA: [300, 500], // Starting point of the ruler
-      pointB: [600, 500], // Ending point of the ruler
-      length: 30.5, // Length value to display
-      units: 'cm', // Units to display
-      font: this.defaultFont!, // Font for text
-      textColor: [1, 0, 0, 1], // Red text
-      lineColor: [0, 0, 0, 1], // Black ruler lines
-      lineThickness: 2, // Thickness of the lines
-      offset: 50, // Offset distance for parallel line and text
-      scale: 1.0, // Scale factor for text
-      showTickmarkNumbers: true // Show tickmark numbers
+    this.renderer.drawMTSDFText({
+      font: this.defaultFont!, // Your loaded UIKFont instance
+      xy: [100, 300], // Starting position
+      str: 'Hello, jay and pique MTSDF!',
+      scale: 1.0,
+      color: [1.0, 0.0, 0.0, 1.0], // Red color
+      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
+      outlineWidthAbsolute: 0.5,
+      outlineWidthRelative: 0.05,
+      outlineBlur: 0.0,
+      threshold: 0.5,
+      outBias: 0.25,
+      gamma: 0.0,
     })
-
-    this.renderer.drawRotatedText({
-      font: this.defaultFont!,
-      xy: [500, 200],
-      str: 'This is a long string that will wrap if it exceeds the maxWidth.',
-      scale: 0.5,
-      color: [1, 1, 1, 1],
-      outlineColor: [0.25, 0.25, 1, 1],
-      rotation: Math.PI / 6, // 30-degree rotation
-      maxWidth: 300 // Wrap to fit within 300px
-    })
-
-    // if(this.hebrewFont) {
-    // this.renderer.drawRotatedText({
-    //   font: this.hebrewFont,
-    //   xy: [800, 500],
-    //   str: 'שָׁלוֹם עֲלֵיכֶם',
-    //   scale: 0.5,
-    //   color: [1, 1, 1, 1],
-    //   outlineColor: [0.25, 0.25, 1, 1],
-    //   rotation: 0,//Math.PI / 6, // 30-degree rotation
-    //   maxWidth: 300 // Wrap to fit within 300px
-    // })
-    // }
-    // const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
-    // this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
-
-    this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
-    this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
-    this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})    
-    this.renderer.drawSlider({
-      position: [800, 700],
-      size: [300, 40], // Slider size
-      value: 50, // Current slider value
-      min: 0,
-      max: 100,
-      trackColor: [0.8, 0.8, 0.8, 1.0], // Light gray
-      fillColor: [0.0, 0.5, 1.0, 1.0], // Blue
-      knobColor: [1.0, 1.0, 1.0, 1.0], // White
-      shadowColor: [0.0, 0.0, 0.0, 0.3], // Light black shadow
-      shadowOffset: [0.03, -0.03], // Slight shadow offset
-      shadowBlur: 0.1, // Smooth shadow blur
-      valueTextColor: [0.0, 0.5, 1.0, 1.0], // Blue text
-      font: this.defaultFont!, // Default font for rendering the slider value
-      scale: 0.5 // Default scale
-    })
-    
-    
-    
-  // this.renderer.drawLine({
-  //   startEnd: [500, 500, 1000, 800],
-  //   thickness: 5,
-  //   color: [0, 1, 0, 1], // Green line
-  //   style: LineStyle.SOLID,
-  //   terminator: LineTerminator.ARROW
+  //   this.renderer.drawRotatedText({
+  //     font: this.defaultFont!, // A loaded UIKFont instance
+  //     xy: [200, 150], // Starting position of the text
+  //     str: 'Hello, MTSDF!', // The text to render
+  //     scale: 1.0, // Scale of the text
+  //     color: [0.0, 0.5, 1.0, 1.0], // Text color (blue)
+  //     rotation: Math.PI / 6, // Rotation in radians (30 degrees)
+  //     outlineColor: [1.0, 1.0, 1.0, 1.0], // Outline color (white)
+  //     outlineThickness: 2, // Thickness of the outline
+  //     maxWidth: 300 // Maximum width for text wrapping
   // })
   
+    
+    // this.renderer.drawMTSDFText({
+    //   font: this.defaultFont!, // Instance of UIKFont, preloaded with MTSDF data
+    //   xy: [500, 500], // Starting position for the text
+    //   str: 'Hello, MedView!', // Text to render
+    //   scale: 1.5, // Scale factor for the text
+    //   color: [0.0, 1.0, 0.0, 1.0], // Green fill color with full opacity
+    //   rotation: Math.PI / 6, // Rotate 30 degrees clockwise
+    //   outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline color with full opacity
+    //   maxWidth: 300, // Wrap text to fit within this width
+    //   u_rounded_fonts: 0.0, // Sharp glyph corners
+    //   u_rounded_outlines: 0.0, // Sharp outline corners
+    //   u_threshold: 0.5, // Midpoint threshold for edge detection
+    //   u_out_bias: 0.25, // Bias for glyph edges
+    //   u_outline_width_absolute: 0.3, // Absolute outline width
+    //   u_outline_width_relative: 0.05, // Relative outline width
+    //   u_outline_blur: 0.0, // No blur
+    //   u_gradient: 0.0, // No gradient effect
+    //   u_gamma: 1.0 // Gamma correction factor
+    // });
+    
+
   }
   
 

@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { coreFunction, callUIKit } from '@medview/core'
 import { CoreRenderer } from '@medview/core'
 // import { render } from 'react-dom'
 
@@ -27,9 +26,7 @@ const App = () => {
 
   return (
     <div>
-      <h1>Welcome to MedView Web App</h1>
-      <p>{coreFunction()}</p>
-      <p>{callUIKit()}</p>
+      <h1>Welcome to MedView Web App</h1>      
       <canvas ref={canvasRef} style={{ border: '1px solid black' }} />
     </div>
   )
