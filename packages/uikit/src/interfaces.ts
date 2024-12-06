@@ -36,6 +36,18 @@ export interface IUIComponent {
   removeEventListener(eventName: string, callback: (event: Event) => void): void
   toJSON(): object
   requestRedraw?: () => void
+  // publicly assignable
+  onPointerDown?: (event: PointerEvent) => void
+  onPointerUp?: (event: PointerEvent) => void  
+  onPointerEnter?: (event: PointerEvent) => void
+  onPointerMove?: (event: PointerEvent) => void
+  onPointerLeave?: (event: PointerEvent) => void
+  // private implementations
+  handlePointerDown?: (event: PointerEvent) => void
+  handlePointerUp?: (event: PointerEvent) => void  
+  handlePointerEnter?: (event: PointerEvent) => void
+  handlePointerMove?: (event: PointerEvent) => void
+  handlePointerLeave?: (event: PointerEvent) => void
 
   alignmentPoint: AlignmentPoint
   verticalAlignment: VerticalAlignment
@@ -212,6 +224,22 @@ export interface TriangleComponentConfig extends BaseUIComponentConfig {
   baseMidPoint: Vec2 // Midpoint of the base of the triangle
   baseLength: number // Length of the base
   color: Color // Color of the triangle
+}
+
+export interface SliderComponentConfig extends BaseUIComponentConfig {
+  size: Vec2 // Dimensions of the slider (width, height)
+  value?: number // Current value of the slider, defaults to 0.5
+  min?: number // Minimum value of the slider, defaults to 0
+  max?: number // Maximum value of the slider, defaults to 1
+  trackColor?: Color // Color of the slider track
+  fillColor?: Color // Color of the filled portion of the slider
+  knobColor?: Color // Color of the knob
+  shadowColor?: Color // Shadow color for the knob
+  shadowOffset?: Vec2 // Offset of the shadow from the knob center
+  shadowBlur?: number // Blur radius of the knob shadow
+  valueTextColor?: Color // Color of the value text displayed below the slider
+  font: UIKFont // Font object for rendering the value text
+  scale?: number // Scale of the slider and text, defaults to 1.0
 }
 
 export interface IColorable extends IUIComponent {

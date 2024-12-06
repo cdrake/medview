@@ -30,7 +30,28 @@ export abstract class BaseUIComponent implements IUIComponent {
   public onPointerDown?: (event: PointerEvent) => void
   public onPointerEnter?: (event: PointerEvent) => void
   public onPointerLeave?: (event: PointerEvent) => void
-  public onPointerDrag?: (event: PointerEvent) => void
+  public onPointerMove?: (event: PointerEvent) => void
+
+  // Protected callable handlers (not assignable)
+  public handlePointerUp(event: PointerEvent): void {
+    this.onPointerUp?.(event)
+  }
+
+  public handlePointerDown(event: PointerEvent): void {
+    this.onPointerDown?.(event)
+  }
+
+  public handlePointerEnter(event: PointerEvent): void {
+    this.onPointerEnter?.(event)
+  }
+
+  public handlePointerLeave(event: PointerEvent): void {
+    this.onPointerLeave?.(event)
+  }
+
+  public handlePointerMove(event: PointerEvent): void {
+    this.onPointerMove?.(event)
+  }
 
   abstract draw(renderer: UIKRenderer): void
 

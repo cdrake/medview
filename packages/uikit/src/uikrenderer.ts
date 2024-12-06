@@ -23,6 +23,7 @@ import { UIKBitmap } from './assets/uikbitmap.js'
 import { UIKSVG } from './assets/uiksvg.js'
 import { ToggleComponent } from './components/togglecomponent.js'
 import { RulerComponent } from './components/rulercomponent.js'
+import { SliderComponent } from './components/slidercomponent.js'
 
 export class UIKRenderer {
   private gl: WebGL2RenderingContext
@@ -255,47 +256,67 @@ export class UIKRenderer {
   }
   
   /**
-   * Draws a circle.
-   * @param params - Object containing the circle parameters.
-   * @param params.leftTopWidthHeight - The bounding box of the circle (left, top, width, height).
-   * @param params.circleColor - The color of the circle.
-   * @param params.fillPercent - The percentage of the circle to fill (0 to 1).
-   * @param params.z - The z-index value of the circle.
-   */
-  public drawCircle({
-    leftTopWidthHeight,
-    circleColor = [1, 1, 1, 1],
-    fillPercent = 1.0,
-    z = 0
-  }: {
-    leftTopWidthHeight: Vec4
-    circleColor?: Color
-    fillPercent?: number
-    z?: number
-  }): void {
-    if (!UIKRenderer.circleShader) {
-      throw new Error('circleShader undefined')
-    }
-
-    UIKRenderer.circleShader.use(this.gl)
-    this.gl.enable(this.gl.BLEND)
-    this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.circleColor, circleColor as Float32List)
-    this.gl.uniform2fv(UIKRenderer.circleShader.uniforms.canvasWidthHeight, [
-      this.gl.canvas.width,
-      this.gl.canvas.height
-    ])
-
-    const rectParams = Array.isArray(leftTopWidthHeight)
-      ? vec4.fromValues(leftTopWidthHeight[0], leftTopWidthHeight[1], leftTopWidthHeight[2], leftTopWidthHeight[3])
-      : leftTopWidthHeight
-
-    this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.leftTopWidthHeight, rectParams as Float32List)
-    this.gl.uniform1f(UIKRenderer.circleShader.uniforms.fillPercent, fillPercent)
-    this.gl.uniform1f(UIKRenderer.circleShader.uniforms.z, z)
-    this.gl.bindVertexArray(UIKRenderer.genericVAO)
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-    this.gl.bindVertexArray(null) // Unbind to avoid side effects
+ * Draws a circle with optional shadow.
+ * @param params - Object containing the circle parameters.
+ * @param params.leftTopWidthHeight - The bounding box of the circle (left, top, width, height).
+ * @param params.circleColor - The color of the circle.
+ * @param params.shadowColor - The color of the shadow (defaults to transparent black).
+ * @param params.shadowOffset - The shadow's offset from the circle center (defaults to no offset).
+ * @param params.shadowBlur - The blur radius for the shadow (defaults to no blur).
+ * @param params.fillPercent - The percentage of the circle to fill (0 to 1).
+ * @param params.z - The z-index value of the circle.
+ */
+public drawCircle({
+  leftTopWidthHeight,
+  circleColor = [1, 1, 1, 1],
+  shadowColor = [0, 0, 0, 0], // Default: transparent black
+  shadowOffset = [0, 0], // Default: no offset
+  shadowBlur = 0.0, // Default: no blur
+  fillPercent = 1.0,
+  z = 0
+}: {
+  leftTopWidthHeight: Vec4
+  circleColor?: Color
+  shadowColor?: Color
+  shadowOffset?: Vec2
+  shadowBlur?: number
+  fillPercent?: number
+  z?: number
+}): void {
+  if (!UIKRenderer.circleShader) {
+    throw new Error('circleShader undefined')
   }
+
+  // Use the circle shader program
+  UIKRenderer.circleShader.use(this.gl)
+  this.gl.enable(this.gl.BLEND)
+
+  // Set uniform values for the shader
+  this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.circleColor, circleColor as Float32List)
+  this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.shadowColor, shadowColor as Float32List)
+  this.gl.uniform2fv(UIKRenderer.circleShader.uniforms.shadowOffset, shadowOffset as Float32List)
+  this.gl.uniform1f(UIKRenderer.circleShader.uniforms.shadowBlur, shadowBlur)
+  this.gl.uniform2fv(UIKRenderer.circleShader.uniforms.canvasWidthHeight, [
+    this.gl.canvas.width,
+    this.gl.canvas.height
+  ])
+
+  // Prepare the rectangle parameters
+  const rectParams = Array.isArray(leftTopWidthHeight)
+    ? vec4.fromValues(leftTopWidthHeight[0], leftTopWidthHeight[1], leftTopWidthHeight[2], leftTopWidthHeight[3])
+    : leftTopWidthHeight
+
+  // Pass the rectangle and other circle properties to the shader
+  this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.leftTopWidthHeight, rectParams as Float32List)
+  this.gl.uniform1f(UIKRenderer.circleShader.uniforms.fillPercent, fillPercent)
+  this.gl.uniform1f(UIKRenderer.circleShader.uniforms.z, z)
+
+  // Bind the vertex array and draw the circle
+  this.gl.bindVertexArray(UIKRenderer.genericVAO)
+  this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
+  this.gl.bindVertexArray(null) // Unbind to avoid side effects
+}
+
 
   /**
    * Draws a line with specified start and end coordinates, thickness, color, and style.
@@ -470,6 +491,19 @@ export class UIKRenderer {
    * @param params.outlineColor - The outline color of the text. Defaults to black.
    * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
    */
+  /**
+ * Draws rotated text, supporting individual character rendering and high-DPI scaling.
+ * @param params - Object containing parameters for rendering rotated text.
+ * @param params.font - The font object for rendering text.
+ * @param params.xy - The starting position of the text.
+ * @param params.str - The string to render.
+ * @param params.scale - The scale of the text. Defaults to 1.0.
+ * @param params.color - The color of the text. Defaults to red.
+ * @param params.rotation - The rotation angle in radians. Defaults to 0.
+ * @param params.outlineColor - The outline color of the text. Defaults to black.
+ * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
+ * @param params.maxWidth - Maximum width for text wrapping.
+ */
   public drawRotatedText({
     font,
     xy,
@@ -611,6 +645,7 @@ export class UIKRenderer {
     // Unbind the VAO
     gl.bindVertexArray(null)
   }
+  
   
   /**
    * Draws a rounded rectangle.
@@ -883,6 +918,79 @@ public drawToggle({
 }): void {  
   ToggleComponent.drawToggle({renderer: this, position, size, isOn, onColor, offColor, knobPosition})
 }
+
+/**
+ * Draws a slider with a track, knob, shadow, and value text.
+ * @param params - Object containing the slider parameters.
+ * @param params.position - The position of the top-left corner of the slider.
+ * @param params.size - The size of the slider ([width, height]).
+ * @param params.value - The current value of the slider (between `min` and `max`).
+ * @param params.min - The minimum value of the slider.
+ * @param params.max - The maximum value of the slider.
+ * @param params.trackColor - The color of the slider track.
+ * @param params.fillColor - The color of the filled portion of the slider.
+ * @param params.knobColor - The color of the slider knob.
+ * @param params.shadowColor - The shadow color for the knob.
+ * @param params.shadowOffset - The shadow's offset from the knob center.
+ * @param params.shadowBlur - The blur radius for the knob shadow.
+ * @param params.valueTextColor - The color of the value text displayed below the slider.
+ * @param params.font - The font object for rendering the slider value text.
+ * @param params.scale - The scale of the slider and text. Defaults to 1.0.
+ */
+public drawSlider({
+  position,
+  size,
+  value = 0.5,
+  min = 0,
+  max = 1,
+  trackColor = [0.8, 0.8, 0.8, 1.0], // Default light gray
+  fillColor = [0.0, 0.5, 1.0, 1.0], // Default blue
+  knobColor = [1.0, 1.0, 1.0, 1.0], // Default white knob
+  shadowColor = [0.0, 0.0, 0.0, 0.2], // Default shadow color
+  shadowOffset = [0.02, 0.02], // Default shadow offset
+  shadowBlur = 0.05, // Default shadow blur radius
+  valueTextColor = [0.0, 0.5, 1.0, 1.0], // Default blue text
+  font,
+  scale = 1.0 // Default scale
+}: {
+  position: Vec2
+  size: Vec2
+  value?: number
+  min?: number
+  max?: number
+  trackColor?: Color
+  fillColor?: Color
+  knobColor?: Color
+  shadowColor?: Color
+  shadowOffset?: Vec2
+  shadowBlur?: number
+  valueTextColor?: Color
+  font: UIKFont
+  scale?: number
+}): void {
+  if (!font) {
+    throw new Error('Font is required to render slider value text.')
+  }
+
+  SliderComponent.drawSlider({
+    renderer: this,
+    font,
+    position,
+    size,
+    value,
+    min,
+    max,
+    trackColor,
+    fillColor,
+    knobColor,
+    shadowColor,
+    shadowOffset,
+    shadowBlur,
+    valueTextColor,
+    scale
+  })
+}
+
 
   /**
      * Draw an oriented box using the box shader.

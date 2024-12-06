@@ -59,7 +59,7 @@ async draw(): Promise<void> {
     }
   
     // Clear the canvas with a black background
-    this.clear([1, 1, 1, 1])
+    this.clear([0.5, 0.5, 0.5, 1])
   
     // Draw a triangle
     // this.renderer.drawTriangle({
@@ -94,16 +94,16 @@ async draw(): Promise<void> {
     // })
   
     // // Draw rotated text
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont,
-    //   xy: [100, 100], // Starting position of the text
-    //   str: 'Hello, MedView!', // The string to render
-    //   scale: 0.50, // Scale factor
-    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-    //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
-    //   outlineThickness: 2 // Outline thickness
-    // })
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [100, 300], // Starting position of the text
+      str: 'Hello, MedView!', // The string to render
+      scale: 0.50, // Scale factor
+      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+      outlineColor: [0, 0, 0, 1], // Outline color (black)
+      outlineThickness: 2 // Outline thickness
+    })
   
     // // Draw a ruler
     this.renderer.drawRuler({
@@ -148,7 +148,26 @@ async draw(): Promise<void> {
 
     this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
     this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
-    this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})
+    this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})    
+    this.renderer.drawSlider({
+      position: [800, 700],
+      size: [300, 40], // Slider size
+      value: 50, // Current slider value
+      min: 0,
+      max: 100,
+      trackColor: [0.8, 0.8, 0.8, 1.0], // Light gray
+      fillColor: [0.0, 0.5, 1.0, 1.0], // Blue
+      knobColor: [1.0, 1.0, 1.0, 1.0], // White
+      shadowColor: [0.0, 0.0, 0.0, 0.3], // Light black shadow
+      shadowOffset: [0.03, -0.03], // Slight shadow offset
+      shadowBlur: 0.1, // Smooth shadow blur
+      valueTextColor: [0.0, 0.5, 1.0, 1.0], // Blue text
+      font: this.defaultFont!, // Default font for rendering the slider value
+      scale: 0.5 // Default scale
+    })
+    
+    
+    
   // this.renderer.drawLine({
   //   startEnd: [500, 500, 1000, 800],
   //   thickness: 5,
