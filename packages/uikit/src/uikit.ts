@@ -316,12 +316,21 @@ export class UIKit {
       }
       if (!this.lastHoveredComponents.has(component)) {
         component.applyEventEffects('pointerenter', event)
-        console.log('event applied', event)
+        if (typeof component.handlePointerEnter === 'function') {
+          component.handlePointerEnter(event)
+        }
+      }
+
+      if (typeof component.handlePointerMove === 'function') {
+        component.handlePointerMove(event)
       }
     }
     for (const component of this.lastHoveredComponents) {
       if (!components.has(component)) {
         component.applyEventEffects('pointerleave', event)
+        if (typeof component.handlePointerLeave === 'function') {
+          component.handlePointerLeave(event)
+        }
       }
     }
     this.lastHoveredComponents = components
@@ -333,6 +342,9 @@ export class UIKit {
     for (const component of components) {
       if (component.isVisible) {
         component.applyEventEffects('pointerdown', event)
+        if (typeof component.handlePointerDown === 'function') {
+          component.handlePointerDown(event)
+        }
       }
     }
   }
@@ -343,7 +355,9 @@ export class UIKit {
     for (const component of components) {
       if (component.isVisible) {
         component.applyEventEffects('pointerup', event)
-        console.log('applying pointer up event to', component)
+        if (typeof component.handlePointerUp === 'function') {
+          component.handlePointerUp(event)
+        }
       }
     }
   }

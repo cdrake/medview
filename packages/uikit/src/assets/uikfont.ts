@@ -1,7 +1,7 @@
 import { vec2 } from 'gl-matrix'
 import { UIKShader } from '../uikshader.js'
-import vertRotatedFontShader from '../shaders/vert/rotated-font.vert.glsl'
-import fragRotatedFontShader from '../shaders/frag/rotated-font.frag.glsl'
+import vertRotatedFontShader from '../shaders/rotated-font.vert.glsl'
+import fragRotatedFontShader from '../shaders/rotated-font.frag.glsl'
 import defaultFontPNG from '../fonts/Roboto-Regular.png'
 import defaultFontMetrics from '../fonts/Roboto-Regular.json' assert { type: 'json' }
 // import defaultFontPNG from '../fonts/NotoSansTC-VariableFont_wght.png'
