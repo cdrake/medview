@@ -103,16 +103,46 @@ export class UIKShader {
       Log.error(`Uniform ${name} not found or unused`)
       return
     }
-    // Handle uniform types
-    if (Array.isArray(value)) {
-      if (value.length === 16) gl.uniformMatrix4fv(location, false, value) // MVP matrix
-      else if (value.length === 4) gl.uniform4fv(location, value)
-      else if (value.length === 3) gl.uniform3fv(location, value)
-      else if (value.length === 2) gl.uniform2fv(location, value)
-    } else if (typeof value === 'number') {
-      gl.uniform1f(location, value)
-    } else {
-      Log.error(`Unsupported uniform type for ${name}`)
+  
+    // Handle Float32Array matrices
+    if (value instanceof Float32Array) {
+      if (value.length === 16) {
+        gl.uniformMatrix4fv(location, false, value) // 4x4 matrix (mat4)
+      } else if (value.length === 9) {
+        gl.uniformMatrix3fv(location, false, value) // 3x3 matrix (mat3)
+      } else if (value.length === 4) {
+        gl.uniformMatrix2fv(location, false, value) // 2x2 matrix (mat2)
+      } else {
+        Log.error(`Unsupported Float32Array uniform length for ${name}: ${value.length}`)
+      }
+      return
     }
+  
+    // Handle array uniforms
+    if (Array.isArray(value)) {
+      if (value.length === 4) gl.uniform4fv(location, value) // vec4
+      else if (value.length === 3) gl.uniform3fv(location, value) // vec3
+      else if (value.length === 2) gl.uniform2fv(location, value) // vec2
+      else {
+        Log.error(`Unsupported array uniform length for ${name}: ${value.length}`)
+      }
+      return
+    }
+  
+    // Handle sampler (integer) uniforms
+    if (typeof value === 'number' && Number.isInteger(value)) {
+      gl.uniform1i(location, value) // sampler2D or sampler3D
+      return
+    }
+  
+    // Handle scalar uniforms
+    if (typeof value === 'number') {
+      gl.uniform1f(location, value)
+      return
+    }
+  
+    Log.error(`Unsupported uniform type for ${name}`)
   }
+  
+  
 }

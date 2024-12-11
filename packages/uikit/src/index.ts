@@ -1,7 +1,10 @@
 export const uiFunction = () => 'Hello from UI Kit!'
 export { UIKRenderer } from './uikrenderer'
+export { UIKShader } from './uikshader'
 export { UIKFont } from './assets/uikfont'
 export { UIKSVG } from './assets/uiksvg'
 export { UIKBitmap } from './assets/uikbitmap'
 export { ColorTables } from './colortables'
+export { Log } from './utilities/log'
+
 export * from './types'
