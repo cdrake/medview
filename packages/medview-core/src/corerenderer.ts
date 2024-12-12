@@ -1,8 +1,8 @@
 import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
-import cuboidVertexShaderSource from '../shaders/cuboid.vert.glsl'
-import cuboidFragmentShaderSource from '../shaders/cuboid.frag.glsl'
-import { mat4 } from 'gl-matrix'
+import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
+import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
+import { mat4, vec3 } from 'gl-matrix'
 
 const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
 const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
@@ -19,7 +19,7 @@ export class CoreRenderer {
   private bitmap: UIKBitmap | null = null
   private niftiLoader: NiftiMeshLoader | null = null
   private cuboidShader: UIKShader | null = null
-  private rotationAngle: number = 0 // Rotation angle around Z-axis
+  private rotationAngle: number = Math.PI / 4 // Rotation angle around Z-axis
   private modelMatrix: mat4 = mat4.create()
   private viewMatrix: mat4 = mat4.create()
   private projectionMatrix: mat4 = mat4.create()
@@ -31,10 +31,11 @@ export class CoreRenderer {
     if (!this.gl) {
       throw new Error('WebGL2 is not supported in this browser')
     }
-
+    console.log('frag shader', cuboidFragmentShaderSource)
+    this.cuboidShader = new UIKShader(this.gl, cuboidVertexShaderSource, cuboidFragmentShaderSource)
     // Initialize the UIKRenderer
     this.renderer = new UIKRenderer(this.gl)
-    this.niftiLoader = new NiftiMeshLoader(this.gl, 'viridis')
+    this.niftiLoader = new NiftiMeshLoader(this.gl)
 
     // Load the default font
     // this.defaultFont = new UIKFont(this.gl)
@@ -61,31 +62,192 @@ export class CoreRenderer {
     this.bitmap = new UIKBitmap(this.gl)
     await this.bitmap.loadBitmap('/images/rorden.png')
 
-    // Load the NIfTI file and generate the 3D texture
-    await this.niftiLoader!.generate3DTexture('./images/mni152.nii')
+    // Load and generate the 3D texture
+    await this.niftiLoader!.init()
+    const result = await this.niftiLoader?.loadFile('./images/mni152.nii')
+    if (!result) {
+      throw new Error('Failed to load NIfTI file.')
+    }
+
+    const [header, volumeData] = result
+    
+    this.niftiLoader!.createTexture(header, volumeData, 'gray')      
+    this.niftiLoader!.createCuboidVAO(header, this.cuboidShader!)      
+    //TODO: remove
+    // this.createHardcodedVertexBuffer()
+
+    // Initialize matrices
+    mat4.lookAt(this.viewMatrix, [0, 0, 5], [0, 0, 0], [0, 1, 0]) // Eye, center, up
+    mat4.perspective(this.projectionMatrix, Math.PI / 4, this.canvas.width / this.canvas.height, 0.1, 100.0) // FOV, aspect, near, far
   }
 
+  // private createHardcodedVertexBuffer(): void {
+  //   const gl = this.gl;
+  
+  //   // Hardcoded cube vertices in NDC with texture coordinates
+  //   const vertices = new Float32Array([
+  //     // Front face
+  //     -0.5, -0.5,  0.5,  0.0, 0.0,
+  //      0.5, -0.5,  0.5,  1.0, 0.0,
+  //      0.5,  0.5,  0.5,  1.0, 1.0,
+  //     -0.5,  0.5,  0.5,  0.0, 1.0,
+  //     // Back face
+  //     -0.5, -0.5, -0.5,  0.0, 0.0,
+  //      0.5, -0.5, -0.5,  1.0, 0.0,
+  //      0.5,  0.5, -0.5,  1.0, 1.0,
+  //     -0.5,  0.5, -0.5,  0.0, 1.0,
+  //   ]);
+  
+  //   const indices = new Uint16Array([
+  //     // Front face
+  //     0, 1, 2, 0, 2, 3,
+  //     // Back face
+  //     4, 5, 6, 4, 6, 7,
+  //     // Top face
+  //     3, 2, 6, 3, 6, 7,
+  //     // Bottom face
+  //     0, 1, 5, 0, 5, 4,
+  //     // Right face
+  //     1, 2, 6, 1, 6, 5,
+  //     // Left face
+  //     0, 3, 7, 0, 7, 4
+  //   ]);
+  
+  //   // Create and bind VAO
+  //   const vao = gl.createVertexArray();
+  //   gl.bindVertexArray(vao);
+  
+  //   // Vertex buffer
+  //   const vertexBuffer = gl.createBuffer();
+  //   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  //   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  
+  //   // Index buffer
+  //   const indexBuffer = gl.createBuffer();
+  //   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  //   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+  
+  //   // Define attributes
+  //   const positionLocation = gl.getAttribLocation(this.cuboidShader!.program, 'aPosition');
+  //   const texCoordLocation = gl.getAttribLocation(this.cuboidShader!.program, 'aTexCoord');
+  
+  //   if (positionLocation >= 0) {
+  //     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 20, 0);
+  //     gl.enableVertexAttribArray(positionLocation);
+  //   }
+  
+  //   if (texCoordLocation >= 0) {
+  //     gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 20, 12);
+  //     gl.enableVertexAttribArray(texCoordLocation);
+  //   }
+  
+  //   // Unbind VAO
+  //   gl.bindVertexArray(null);
+  
+  //   this.niftiLoader!.vao = vao; // Assign the VAO for rendering
+  // }
+  
+
+  /**
+   * Render the cuboid with the 3D texture.
+   */
+  // private renderCuboid(): void {
+  //   const gl = this.gl
+  
+  //   // Check for required resources
+  //   if (!this.niftiLoader?.vao || !this.niftiLoader?.volumeTexture || !this.cuboidShader) {
+  //     console.error('Missing VAO, texture, or shader')
+  //     return
+  //   }
+  
+  //   // Set viewport and clear the canvas
+  //   gl.viewport(0, 0, this.canvas.width, this.canvas.height)
+  //   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+  
+  //   // Calculate the Model-View-Projection (MVP) matrix
+  //   const mvpMatrix = mat4.create()
+  //   mat4.identity(this.modelMatrix)
+  //   mat4.rotateY(this.modelMatrix, this.modelMatrix, this.rotationAngle) // Y-axis rotation
+  //   mat4.rotateZ(this.modelMatrix, this.modelMatrix, this.rotationAngle / 2) // Z-axis rotation
+  //   mat4.multiply(mvpMatrix, this.viewMatrix, this.modelMatrix) // View * Model
+  //   mat4.multiply(mvpMatrix, this.projectionMatrix, mvpMatrix) // Projection * (View * Model)
+  
+  //   console.log('MVP Matrix:', mvpMatrix)
+  
+  //   // Use the cuboid shader program
+  //   this.cuboidShader.use(gl)
+  
+  //   // Set the MVP matrix uniform
+  //   this.cuboidShader.setUniform(gl, 'uMVPMatrix', mvpMatrix)
+  
+  //   // Bind the 3D texture and set the texture uniform
+  //   gl.activeTexture(gl.TEXTURE0)
+  //   gl.bindTexture(gl.TEXTURE_3D, this.niftiLoader.volumeTexture)
+  //   this.cuboidShader.setUniform(gl, 'uVolumeTexture', 0)
+  
+  //   // Bind the VAO
+  //   gl.bindVertexArray(this.niftiLoader.vao)
+  
+  //   // Enable attributes explicitly (this ensures they are active during rendering)
+  //   const positionLocation = gl.getAttribLocation(this.cuboidShader.program, 'aPosition')
+  //   const texCoordLocation = gl.getAttribLocation(this.cuboidShader.program, 'aTexCoord')
+  
+  //   if (positionLocation >= 0) {
+  //     gl.enableVertexAttribArray(positionLocation)
+  //   }
+  //   if (texCoordLocation >= 0) {
+  //     gl.enableVertexAttribArray(texCoordLocation)
+  //   }
+  
+  //   // Render the cuboid using drawElements
+  //   gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0)
+  
+  //   // Disable attributes after rendering to avoid unintended use later
+  //   if (positionLocation >= 0) {
+  //     gl.disableVertexAttribArray(positionLocation)
+  //   }
+  //   if (texCoordLocation >= 0) {
+  //     gl.disableVertexAttribArray(texCoordLocation)
+  //   }
+  
+  //   // Unbind the VAO after rendering
+  //   gl.bindVertexArray(null)
+  // }
+  
   private renderCuboid(): void {
     const gl = this.gl
   
     if (!this.niftiLoader?.vao || !this.niftiLoader?.volumeTexture || !this.cuboidShader) {
+      console.error('Missing VAO, texture, or shader')
       return
     }
   
-    // Increment rotation angle
-    this.rotationAngle += 0.01
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    // gl.enable(gl.CULL_FACE)
+    // gl.cullFace(gl.BACK)
+
+    const { dims, pixDims } = this.niftiLoader.header!
+    const width = dims[1] * pixDims[1]
+    const height = dims[2] * pixDims[2]
+    const depth = dims[3] * pixDims[3]
   
-    // Calculate the Model-View-Projection (MVP) matrix
+    // Calculate the scale factor based on the largest dimension
+    const largestDimension = Math.max(width, height, depth)
+    const scaleFactor = (1 / 3) * 2.0 / largestDimension
+  
+    // Create the MVP matrix
     const mvpMatrix = mat4.create()
     mat4.identity(this.modelMatrix)
-    mat4.rotateZ(this.modelMatrix, this.modelMatrix, this.rotationAngle) // Apply Z-axis rotation
-    mat4.multiply(mvpMatrix, this.viewMatrix, this.modelMatrix) // View * Model
-    mat4.multiply(mvpMatrix, this.projectionMatrix, mvpMatrix) // Projection * (View * Model)
+    mat4.scale(this.modelMatrix, this.modelMatrix, [scaleFactor, scaleFactor, scaleFactor]) // Scale to fit within 1/3 of canvas
+    mat4.translate(this.modelMatrix, this.modelMatrix, [0, 0, -0.5]) // Position the cuboid in the center
+    mat4.rotateZ(this.modelMatrix, this.modelMatrix, this.rotationAngle)
+    mat4.rotateY(this.modelMatrix, this.modelMatrix, this.rotationAngle / 2)
+    mat4.multiply(mvpMatrix, this.viewMatrix, this.modelMatrix)
+    mat4.multiply(mvpMatrix, this.projectionMatrix, mvpMatrix)
   
     // Use the cuboid shader
     this.cuboidShader.use(gl)
-  
-    // Set the MVP matrix
     this.cuboidShader.setUniform(gl, 'uMVPMatrix', mvpMatrix)
   
     // Bind 3D texture
@@ -93,11 +255,23 @@ export class CoreRenderer {
     gl.bindTexture(gl.TEXTURE_3D, this.niftiLoader.volumeTexture)
     this.cuboidShader.setUniform(gl, 'uVolumeTexture', 0)
   
-    // Render the cuboid using the VAO from NiftiMeshLoader
+    // Set the clip plane
+    const clipPlane = [0.0, 0.0, 0.0, 0.0]; // Example: z-axis plane at 0.5 in normalized texture space
+    // const clipPlane = [0.0, 0.0, 1.0, 0.0]
+    this.cuboidShader.setUniform(gl, 'uClipPlane', clipPlane)
+    // this.cuboidShader.setUniform(gl, 'uEnableClipping', false)
+    // Bind VAO
     gl.bindVertexArray(this.niftiLoader.vao)
-    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0) // Assuming 36 indices for a cuboid
+  
+    // Render the cuboid
+    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0)
+  
+    // Cleanup
     gl.bindVertexArray(null)
   }
+  
+  
+  
   
   
   /**
@@ -224,7 +398,11 @@ async draw(): Promise<void> {
   //   color: [0, 1, 0, 1], // Green line
   //   style: LineStyle.SOLID,
   //   terminator: LineTerminator.ARROW
-  // })     
+  // })
+      // Increment rotation angle
+      this.rotationAngle += 0.01     
+      // Schedule the next frame
+      // requestAnimationFrame(() => this.draw())
   }
   
 

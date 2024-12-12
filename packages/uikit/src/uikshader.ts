@@ -100,7 +100,7 @@ export class UIKShader {
   setUniform(gl: WebGL2RenderingContext, name: string, value: any): void {
     const location = this.uniforms[name]
     if (location === null || location === undefined) {
-      Log.error(`Uniform ${name} not found or unused`)
+      // Log.error(`Uniform ${name} not found or unused`)
       return
     }
   

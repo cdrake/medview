@@ -11,8 +11,8 @@ const App = () => {
     if (!canvas) return
 
     // Set canvas size
-    canvas.width = 1200 //* window.devicePixelRatio || 1
-    canvas.height = 1200 //* window.devicePixelRatio || 1
+    canvas.width = 800 //* window.devicePixelRatio || 1
+    canvas.height = 800 //* window.devicePixelRatio || 1
 
     // Initialize CoreRenderer with the canvas
     const renderer = new CoreRenderer(canvas)
@@ -30,7 +30,7 @@ const App = () => {
       <h1>Welcome to MedView Web App</h1>
       <p>{coreFunction()}</p>
       <p>{callUIKit()}</p>
-      <canvas ref={canvasRef} style={{ border: '1px solid black' }} />
+      <canvas ref={canvasRef} style={{ margin: '50px', border: '1px solid black' }} />
     </div>
   )
 }
