@@ -1,8 +1,9 @@
-import { UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
 import { mat4, vec3 } from 'gl-matrix'
+import { VolumeRendererComponent } from './components/volume-renderer-component'
 
 const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
 const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
@@ -10,6 +11,8 @@ const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
 export class CoreRenderer {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
+  private uikit: UIKit | null = null
+
   private renderer: UIKRenderer
   private defaultFont: UIKFont | null = null
   private hebrewFont: UIKFont | null = null
@@ -24,6 +27,37 @@ export class CoreRenderer {
   private viewMatrix: mat4 = mat4.create()
   private projectionMatrix: mat4 = mat4.create()
 
+  async initUIKit(): Promise<void> {
+    const gl = this.gl
+
+    // Instantiate UIKit
+    this.uikit = new UIKit(gl)
+
+    // Initialize NiftiMeshLoader
+    const niftiLoader = new NiftiMeshLoader(gl)
+    const [header, volumeData] = await niftiLoader.loadFile('./images/mni152.nii')
+    niftiLoader.createTexture(header, volumeData, 'viridis')
+    niftiLoader.createCuboidVAO(header, this.cuboidShader!)
+
+    // Create UIKShader
+
+    // Instantiate VolumeRendererComponent
+    const volumeRenderer = new VolumeRendererComponent({
+      gl,
+      niftiLoader,
+      cuboidShader: this.cuboidShader!,
+      position: [0, 0],
+      bounds: [0, 0, this.gl.canvas.width, this.gl.canvas.height],
+      alignmentPoint: UIKit.alignmentPoint.MIDDLECENTER
+    })
+    // volumeRenderer.setTranslateOffset(0, 0, -50)
+    // Add VolumeRendererComponent to UIKit
+    this.uikit.addComponent(volumeRenderer)
+
+    // Render the UI
+    this.uikit.draw()
+  }
+  
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.gl = canvas.getContext('webgl2') as WebGL2RenderingContext
@@ -31,7 +65,7 @@ export class CoreRenderer {
     if (!this.gl) {
       throw new Error('WebGL2 is not supported in this browser')
     }
-    console.log('frag shader', cuboidFragmentShaderSource)
+    // console.log('frag shader', cuboidFragmentShaderSource)
     this.cuboidShader = new UIKShader(this.gl, cuboidVertexShaderSource, cuboidFragmentShaderSource)
     // Initialize the UIKRenderer
     this.renderer = new UIKRenderer(this.gl)
@@ -48,7 +82,8 @@ export class CoreRenderer {
     //   })
       
     // })
-    this.init().then(() => this.draw())
+    // this.init().then(() => this.draw())
+    this.initUIKit()
   }
 
   async init() {

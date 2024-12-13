@@ -63,7 +63,7 @@ export abstract class BaseUIComponent implements IUIComponent {
     this.zIndex = config.zIndex ?? 0
     this.id = config.id ?? uuidv4()
     this.tags = config.tags ?? []
-    this.className = config.className
+    this.className = config.className || 'None'
     this.position = config.position ?? [0, 0]
     this.bounds = config.bounds ?? [0, 0, 0, 0]
     this.scale = config.scale ?? 1
@@ -262,7 +262,7 @@ export abstract class BaseUIComponent implements IUIComponent {
   }
 
   applyEventEffects(eventName: string): void {
-    console.log('event being applied', eventName, this)
+    // console.log('event being applied', eventName, this)
     if (!eventName) {
       return
     }

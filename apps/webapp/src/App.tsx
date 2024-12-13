@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { coreFunction, callUIKit } from '@medview/core'
 import { CoreRenderer } from '@medview/core'
 // import { render } from 'react-dom'
 
@@ -11,27 +10,20 @@ const App = () => {
     if (!canvas) return
 
     // Set canvas size
-    canvas.width = 800 //* window.devicePixelRatio || 1
-    canvas.height = 800 //* window.devicePixelRatio || 1
+    canvas.width = document.body.clientWidth - 2//* window.devicePixelRatio || 1
+    canvas.height = document.body.clientHeight - 2//* window.devicePixelRatio || 1
 
     // Initialize CoreRenderer with the canvas
-    const renderer = new CoreRenderer(canvas)
-
-    
-
-    // Clear the canvas
-    renderer.clear([0.9, 0.9, 0.9, 1]) // Light gray background
-    renderer.draw()
+    const _renderer = new CoreRenderer(canvas)
+    if(!_renderer) {
+      console.log('could not initalize renderer')
+      return
+    }
     
   }, [])
 
   return (
-    <div>
-      <h1>Welcome to MedView Web App</h1>
-      <p>{coreFunction()}</p>
-      <p>{callUIKit()}</p>
-      <canvas ref={canvasRef} style={{ margin: '50px', border: '1px solid black' }} />
-    </div>
+      <canvas ref={canvasRef} style={{ border: '1px solid black' }} />
   )
 }
 

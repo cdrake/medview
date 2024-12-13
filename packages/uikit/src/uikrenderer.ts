@@ -26,7 +26,7 @@ import { RulerComponent } from './components/rulercomponent.js'
 import { SliderComponent } from './components/slidercomponent.js'
 
 export class UIKRenderer {
-  private gl: WebGL2RenderingContext
+  private _gl: WebGL2RenderingContext
   protected static lineShader: UIKShader
   protected static circleShader: UIKShader
   protected static rectShader: UIKShader
@@ -41,8 +41,12 @@ export class UIKRenderer {
   protected static triangleVertexBuffer: WebGLBuffer
   protected static fullScreenVAO: WebGLVertexArrayObject
 
+  get gl(): WebGL2RenderingContext {
+    return this._gl
+  }
+  
   constructor(gl: WebGL2RenderingContext) {
-    this.gl = gl
+    this._gl = gl
     
     if(!UIKRenderer.lineShader) {
       UIKRenderer.lineShader = new UIKShader(gl, lineVert, solidColorFrag)
@@ -157,15 +161,15 @@ export class UIKRenderer {
 
     if (!UIKRenderer.triangleVertexBuffer) {
       // Create a static vertex buffer
-      UIKRenderer.triangleVertexBuffer = this.gl.createBuffer() as WebGLBuffer
-      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, UIKRenderer.triangleVertexBuffer)
+      UIKRenderer.triangleVertexBuffer = this._gl.createBuffer() as WebGLBuffer
+      this._gl.bindBuffer(this._gl.ARRAY_BUFFER, UIKRenderer.triangleVertexBuffer)
 
       // Allocate space for 3 vertices (triangle), each with 2 components (x, y)
       const initialVertices = new Float32Array(6)
-      this.gl.bufferData(this.gl.ARRAY_BUFFER, initialVertices, this.gl.DYNAMIC_DRAW)
+      this._gl.bufferData(this._gl.ARRAY_BUFFER, initialVertices, this._gl.DYNAMIC_DRAW)
       gl.bindVertexArray(null) // Unbind VAO when done
       // Unbind the buffer to prevent accidental modification
-      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
+      this._gl.bindBuffer(this._gl.ARRAY_BUFFER, null)
     }
   }
 
@@ -191,7 +195,7 @@ export class UIKRenderer {
     color: Color
     z?: number
   }): void {
-    const canvas = this.gl.canvas as HTMLCanvasElement
+    const canvas = this._gl.canvas as HTMLCanvasElement
 
     // Convert screen points to WebGL coordinates
     const hp = Array.isArray(headPoint) ? headPoint : [headPoint[0], headPoint[1]]
@@ -206,7 +210,7 @@ export class UIKRenderer {
       console.error('Vertex buffer is not defined at draw time')
       return
     }
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, UIKRenderer.triangleVertexBuffer)
+    this._gl.bindBuffer(this._gl.ARRAY_BUFFER, UIKRenderer.triangleVertexBuffer)
 
     // Calculate left and right base vertices
     const directionX = webglHeadX - webglBaseMidX
@@ -231,28 +235,28 @@ export class UIKRenderer {
       rightBaseY // Right base vertex
     ])
 
-    this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, vertices)
+    this._gl.bufferSubData(this._gl.ARRAY_BUFFER, 0, vertices)
     // Use the shader program
-    UIKRenderer.triangleShader.use(this.gl)
+    UIKRenderer.triangleShader.use(this._gl)
 
     // Bind the position attribute
     const positionLocation = UIKRenderer.triangleShader.uniforms.a_position as GLuint
-    this.gl.enableVertexAttribArray(positionLocation)
-    this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0)
+    this._gl.enableVertexAttribArray(positionLocation)
+    this._gl.vertexAttribPointer(positionLocation, 2, this._gl.FLOAT, false, 0, 0)
 
     // Set u_antialiasing in pixels and canvas size in pixels
-    this.gl.uniform1f(UIKRenderer.triangleShader.uniforms.u_antialiasing, baseLength * 0.01) // Example proportion
-    this.gl.uniform2f(UIKRenderer.triangleShader.uniforms.u_canvasSize, canvas.width, canvas.height)
+    this._gl.uniform1f(UIKRenderer.triangleShader.uniforms.u_antialiasing, baseLength * 0.01) // Example proportion
+    this._gl.uniform2f(UIKRenderer.triangleShader.uniforms.u_canvasSize, canvas.width, canvas.height)
 
     // Set the color uniform
-    this.gl.uniform4fv(UIKRenderer.triangleShader.uniforms.u_color, color as Float32List)
+    this._gl.uniform4fv(UIKRenderer.triangleShader.uniforms.u_color, color as Float32List)
 
     // Set z value
-    this.gl.uniform1f(UIKRenderer.triangleShader.uniforms.u_z, z)
+    this._gl.uniform1f(UIKRenderer.triangleShader.uniforms.u_z, z)
 
     // Draw the triangle
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3)
-    this.gl.bindVertexArray(null)
+    this._gl.drawArrays(this._gl.TRIANGLES, 0, 3)
+    this._gl.bindVertexArray(null)
   }
   
   /**
@@ -288,17 +292,17 @@ public drawCircle({
   }
 
   // Use the circle shader program
-  UIKRenderer.circleShader.use(this.gl)
-  this.gl.enable(this.gl.BLEND)
+  UIKRenderer.circleShader.use(this._gl)
+  this._gl.enable(this._gl.BLEND)
 
   // Set uniform values for the shader
-  this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.circleColor, circleColor as Float32List)
-  this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.shadowColor, shadowColor as Float32List)
-  this.gl.uniform2fv(UIKRenderer.circleShader.uniforms.shadowOffset, shadowOffset as Float32List)
-  this.gl.uniform1f(UIKRenderer.circleShader.uniforms.shadowBlur, shadowBlur)
-  this.gl.uniform2fv(UIKRenderer.circleShader.uniforms.canvasWidthHeight, [
-    this.gl.canvas.width,
-    this.gl.canvas.height
+  this._gl.uniform4fv(UIKRenderer.circleShader.uniforms.circleColor, circleColor as Float32List)
+  this._gl.uniform4fv(UIKRenderer.circleShader.uniforms.shadowColor, shadowColor as Float32List)
+  this._gl.uniform2fv(UIKRenderer.circleShader.uniforms.shadowOffset, shadowOffset as Float32List)
+  this._gl.uniform1f(UIKRenderer.circleShader.uniforms.shadowBlur, shadowBlur)
+  this._gl.uniform2fv(UIKRenderer.circleShader.uniforms.canvasWidthHeight, [
+    this._gl.canvas.width,
+    this._gl.canvas.height
   ])
 
   // Prepare the rectangle parameters
@@ -307,14 +311,14 @@ public drawCircle({
     : leftTopWidthHeight
 
   // Pass the rectangle and other circle properties to the shader
-  this.gl.uniform4fv(UIKRenderer.circleShader.uniforms.leftTopWidthHeight, rectParams as Float32List)
-  this.gl.uniform1f(UIKRenderer.circleShader.uniforms.fillPercent, fillPercent)
-  this.gl.uniform1f(UIKRenderer.circleShader.uniforms.z, z)
+  this._gl.uniform4fv(UIKRenderer.circleShader.uniforms.leftTopWidthHeight, rectParams as Float32List)
+  this._gl.uniform1f(UIKRenderer.circleShader.uniforms.fillPercent, fillPercent)
+  this._gl.uniform1f(UIKRenderer.circleShader.uniforms.z, z)
 
   // Bind the vertex array and draw the circle
-  this.gl.bindVertexArray(UIKRenderer.genericVAO)
-  this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-  this.gl.bindVertexArray(null) // Unbind to avoid side effects
+  this._gl.bindVertexArray(UIKRenderer.genericVAO)
+  this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4)
+  this._gl.bindVertexArray(null) // Unbind to avoid side effects
 }
 
 
@@ -347,7 +351,7 @@ public drawCircle({
       style = LineStyle.SOLID,
       dashDotLength = 5
     } = config
-    const gl = this.gl
+    const gl = this._gl
 
     // Extract start and end points
     const lineCoords = Array.isArray(startEnd)
@@ -467,7 +471,7 @@ public drawCircle({
    */
   private drawSegment(config: { segmentCoords: Vec4; thickness: number; color: Color }): void {
     const { segmentCoords, thickness, color } = config
-    const gl = this.gl
+    const gl = this._gl
 
     UIKRenderer.lineShader.use(gl)
     gl.uniform4fv(UIKRenderer.lineShader.uniforms.lineColor, color as Float32List)
@@ -535,7 +539,7 @@ public drawCircle({
     }
   
     const rotatedFontShader = UIKRenderer.rotatedFontShader
-    const gl = this.gl
+    const gl = this._gl
   
     // Bind the font texture
     gl.activeTexture(gl.TEXTURE0)
@@ -677,7 +681,7 @@ public drawCircle({
       throw new Error('roundedRectShader undefined')
     }
 
-    const gl = this.gl
+    const gl = this._gl
 
     // Use the rounded rectangle shader program
     UIKRenderer.roundedRectShader.use(gl)
@@ -692,15 +696,15 @@ public drawCircle({
 
     const rectParams = Array.isArray(bounds) ? vec4.fromValues(bounds[0], bounds[1], bounds[2], bounds[3]) : bounds
 
-    this.gl.uniform1f(shader.uniforms.thickness, thickness)
-    this.gl.uniform1f(shader.uniforms.cornerRadius, adjustedCornerRadius)
-    this.gl.uniform4fv(shader.uniforms.borderColor, outlineColor as Float32List)
-    this.gl.uniform4fv(shader.uniforms.fillColor, fillColor as Float32List)
-    this.gl.uniform2fv(shader.uniforms.canvasWidthHeight, [this.gl.canvas.width, this.gl.canvas.height])
-    this.gl.uniform4fv(shader.uniforms.leftTopWidthHeight, rectParams as Float32List)
-    this.gl.bindVertexArray(UIKRenderer.genericVAO)
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-    this.gl.bindVertexArray(null)
+    this._gl.uniform1f(shader.uniforms.thickness, thickness)
+    this._gl.uniform1f(shader.uniforms.cornerRadius, adjustedCornerRadius)
+    this._gl.uniform4fv(shader.uniforms.borderColor, outlineColor as Float32List)
+    this._gl.uniform4fv(shader.uniforms.fillColor, fillColor as Float32List)
+    this._gl.uniform2fv(shader.uniforms.canvasWidthHeight, [this._gl.canvas.width, this._gl.canvas.height])
+    this._gl.uniform4fv(shader.uniforms.leftTopWidthHeight, rectParams as Float32List)
+    this._gl.bindVertexArray(UIKRenderer.genericVAO)
+    this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4)
+    this._gl.bindVertexArray(null)
   }
   
   /**
@@ -774,7 +778,7 @@ public drawCircle({
       return
     }
 
-    const gl = this.gl
+    const gl = this._gl
     const shader = bitmap.bitmapShader
     shader.use(gl)
 
@@ -834,7 +838,7 @@ public drawCircle({
     size: Vec2
     gradientTexture: WebGLTexture
   }): void {
-    const gl = this.gl
+    const gl = this._gl
     const [x, y] = position
     const [width, height] = size
 
@@ -872,7 +876,7 @@ public drawSVG({ svgAsset, position, scale }: { svgAsset: UIKSVG; position: Vec2
     return
   }
 
-  const gl = this.gl
+  const gl = this._gl
   const shader = svgAsset.bitmapShader
   shader.use(gl)
 

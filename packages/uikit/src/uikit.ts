@@ -1,4 +1,4 @@
-import { Rectangle, QuadTree } from './quadtree.js'
+import { Rectangle, QuadTree } from './quadtree'
 import {
   Vec2,
   Vec4,
@@ -10,13 +10,13 @@ import {
   HorizontalAlignment,
   VerticalAlignment,
   Plane
-} from './types.js'
-import { UIKRenderer } from './uikrenderer.js'
-import { UIKFont } from './assets/uikfont.js'
-import { UIKBitmap } from './assets/uikbitmap.js'
-import { BaseContainerComponent } from './components/basecontainercomponent.js'
-import { AnimationManager } from './animationmanager.js'
-import { IUIComponent } from './interfaces.js'
+} from './types'
+import { UIKRenderer } from './uikrenderer'
+import { UIKFont } from './assets/uikfont'
+import { UIKBitmap } from './assets/uikbitmap'
+import { BaseContainerComponent } from './components/basecontainercomponent'
+import { AnimationManager } from './animationmanager'
+import { IUIComponent } from './interfaces'
 
 
 export class UIKit {
@@ -126,6 +126,9 @@ export class UIKit {
     const mqString = `(resolution: ${window.devicePixelRatio}dppx)`
     const media = matchMedia(mqString)
     media.addEventListener('change', this.handleUpdatedPixelRatio.bind(this))
+
+    // Add event listener for wheel (scroll) events
+    canvas.addEventListener('wheel', this.handleWheel.bind(this))
   }
 
    /**
@@ -188,6 +191,24 @@ export class UIKit {
       
     }
   }
+
+  private handleWheel(event: WheelEvent): void {
+    event.preventDefault()
+
+    const { clientX, clientY } = event
+    const point: Vec2 = [clientX * this.dpr, clientY * this.dpr]
+
+    // Query components under the mouse pointer
+    const components = this.quadTree.queryPoint(point).filter((component) => component.isVisible)
+
+    for (const component of components) {
+      // Check if the component has a zoom handler
+      if (typeof component.handleWheelScroll === 'function') {
+        component.handleWheelScroll(event)
+      }
+    }
+  }
+
   /**
    * callback function to handle resize window events, redraws the scene.
    * @internal
@@ -374,6 +395,13 @@ export class UIKit {
 
     const bounds = new Rectangle(0, 0, this.canvasWidth * this.dpr, this.canvasHeight * this.dpr)
     this.quadTree.updateBoundary(bounds)
+
+    const components = this.quadTree.getAllElements()
+    for (const component of components) {
+      if (typeof component.handleResize === 'function') {
+        component.handleResize()
+      }
+    }
   }
 
   // Handler for pointer down events
@@ -382,17 +410,17 @@ export class UIKit {
     if (pos) {
       this.activePointers.set(event.pointerId, [pos.x, pos.y])
       this.processPointerDown(pos.x, pos.y, event)
-    }
+    }    
   }
 
   private handlePointerUp(event: PointerEvent): void {
     const pos = this.getCanvasRelativePosition(event)
     if (pos) {
-      console.log('handle click called')
+      // console.log('handle click called')
       const currentClickTime = performance.now()
-      console.log('current click time', currentClickTime)
+      // console.log('current click time', currentClickTime)
       const elapsed = currentClickTime - this.lastClickTime
-      console.log('elapsed', elapsed)
+      // console.log('elapsed', elapsed)
       if (elapsed > 200) {
         this.processPointerUp(pos.x, pos.y, event)
       }
@@ -465,7 +493,7 @@ export class UIKit {
   }
 
   private handlePan(dx: number, dy: number): void {
-    console.log('Pan delta:', dx, dy)
+    // console.log('Pan delta:', dx, dy)
     // Add your pan logic here
   }
 
