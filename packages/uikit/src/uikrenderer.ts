@@ -44,7 +44,7 @@ export class UIKRenderer {
   get gl(): WebGL2RenderingContext {
     return this._gl
   }
-  
+
   constructor(gl: WebGL2RenderingContext) {
     this._gl = gl
     
@@ -658,6 +658,48 @@ public drawCircle({
     // Unbind the VAO
     gl.bindVertexArray(null)
   }
+
+  /**
+   * Draws non-rotated text using the existing drawRotatedText method.
+   * Simplifies text rendering for cases without rotation or outlines.
+   * 
+   * @param params - Object containing parameters for rendering text.
+   * @param params.font - The font object for rendering text.
+   * @param params.position - The position of the text [x, y].
+   * @param params.text - The string to render.
+   * @param params.scale - The scale of the text. Defaults to 1.0.
+   * @param params.color - The color of the text. Defaults to black.
+   * @param params.maxWidth - Maximum width for text wrapping. Defaults to 0 (no wrapping).
+   */
+  public drawText({
+    font,
+    position,
+    text,
+    scale = 1.0,
+    color = [0, 0, 0, 1],
+    maxWidth = 0
+  }: {
+    font: UIKFont
+    position: Vec2
+    text: string
+    scale?: number
+    color?: Color
+    maxWidth?: number
+  }): void {
+    // Use the existing drawRotatedText method with default rotation and outline parameters
+    this.drawRotatedText({
+      font,
+      xy: position,
+      str: text,
+      scale,
+      color,
+      rotation: 0, // No rotation
+      outlineColor: [0, 0, 0, 0], // No outline
+      outlineThickness: 0, // No outline thickness
+      maxWidth
+    })
+  }
+
   
   
   /**
