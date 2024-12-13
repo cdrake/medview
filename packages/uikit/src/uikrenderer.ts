@@ -21,9 +21,9 @@ import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
 import { UIKFont } from './assets/uikfont.js'
 import { UIKBitmap } from './assets/uikbitmap.js'
 import { UIKSVG } from './assets/uiksvg.js'
-import { ToggleComponent } from './components/togglecomponent.js'
-import { RulerComponent } from './components/rulercomponent.js'
-import { SliderComponent } from './components/slidercomponent.js'
+import { ToggleComponent } from './components/toggle-component.js'
+import { RulerComponent } from './components/ruler-component.js'
+import { SliderComponent } from './components/slider-component.js'
 
 export class UIKRenderer {
   private _gl: WebGL2RenderingContext

@@ -1,7 +1,7 @@
 import { UIKRenderer } from '../uikrenderer'
 import { Vec2, Color } from '../types'
 import { SliderComponentConfig } from '../interfaces'
-import { BaseUIComponent } from './baseuicomponent'
+import { BaseUIComponent } from './base-ui-component'
 import { UIKFont } from '../assets/uikfont'
 
 export class SliderComponent extends BaseUIComponent {

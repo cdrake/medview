@@ -14,7 +14,7 @@ import {
 import { UIKRenderer } from './uikrenderer'
 import { UIKFont } from './assets/uikfont'
 import { UIKBitmap } from './assets/uikbitmap'
-import { BaseContainerComponent } from './components/basecontainercomponent'
+import { BaseContainerComponent } from './components/base-container-component'
 import { AnimationManager } from './animationmanager'
 import { IUIComponent } from './interfaces'
 

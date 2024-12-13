@@ -2,7 +2,7 @@ import { IColorable, TextComponentConfig } from '../interfaces'
 import { UIKRenderer } from '../uikrenderer'
 import { Color, Vec4 } from '../types'
 import { UIKFont } from '../assets/uikfont'
-import { BaseUIComponent } from './baseuicomponent'
+import { BaseUIComponent } from './base-ui-component'
 
 export class TextComponent extends BaseUIComponent implements IColorable {
   protected textColor: Color

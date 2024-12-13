@@ -96,9 +96,10 @@ export interface TextComponentConfig extends BaseUIComponentConfig {
 
 export interface TextBoxComponentConfig extends TextComponentConfig {
   outlineColor?: Color
-  fillColor?: Color
+  outlineWidth?: number
+  backgroundColor?: Color
   innerMargin?: number
-  roundness?: number
+  cornerRadius?: number
   fontOutlineColor?: Color
   fontOutlineThickness?: number
 }
