@@ -1,4 +1,4 @@
-import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
@@ -35,6 +35,7 @@ export class CoreRenderer {
 
     // Initialize NiftiMeshLoader
     const niftiLoader = new NiftiMeshLoader(gl)
+    await niftiLoader.init()
     const [header, volumeData] = await niftiLoader.loadFile('./images/mni152.nii')
     niftiLoader.createTexture(header, volumeData, 'viridis')
     niftiLoader.createCuboidVAO(header, this.cuboidShader!)
@@ -49,8 +50,8 @@ export class CoreRenderer {
     const centerBounds: [number, number, number, number] = [
       cellWidth, // x
       cellHeight, // y
-      cellWidth, // width
-      cellHeight // height
+      cellWidth + 200, // width
+      cellHeight + 200 // height
     ]
 
     // Instantiate VolumeRendererComponent
@@ -58,7 +59,7 @@ export class CoreRenderer {
       gl,
       niftiLoader,
       cuboidShader: this.cuboidShader!,
-      position: [cellWidth, cellHeight],
+      position: [0, 0],
       bounds: centerBounds,
       alignmentPoint: UIKit.alignmentPoint.MIDDLECENTER
     })
@@ -66,8 +67,62 @@ export class CoreRenderer {
     // Add VolumeRendererComponent to UIKit
     this.uikit.addComponent(volumeRenderer)
 
+    // Create a PanelContainerComponent with Apple-themed gradient
+    const panelContainer = new PanelContainerComponent({
+      canvas: this.canvas,
+      position: [0, 0],
+      bounds: [210, 10, 400, 200],
+      backgroundColor: [1, 1, 1, 1],
+      gradientStartColor: [0.0, 0.478, 1.0, 0.4], // Apple blue
+      gradientEndColor: [0.0, 0.698, 1.0, 1.0], // Slightly lighter blue
+      outlineColor: [0.0, 0.0, 0.0, 1.0],
+      outlineWidth: 2,
+      padding: 35,
+      isHorizontal: false
+    })
+
+    // Load the default font if not already loaded
+    if (!this.defaultFont) {
+      this.defaultFont = new UIKFont(gl)
+      await this.defaultFont.loadDefaultFont()
+    }
+
+    // Add some text components to the panel
+    const text1 = new TextComponent({
+      position: [20, 20],
+      text: 'Welcome to UIKit!',
+      font: this.defaultFont,
+      textColor: [1, 1, 1, 1],
+      scale: 0.7
+    })
+
+    const text2 = new TextComponent({
+      position: [20, 60],
+      text: 'Experience the future of medical visualization.',
+      font: this.defaultFont,
+      textColor: [1, 1, 1, 1],
+      scale: 0.5
+    })
+
+    panelContainer.addComponent(text1)
+    panelContainer.addComponent(text2)
+
+    // Add the panel to UIKit
+    this.uikit.addComponent(panelContainer)
+
     // Render the UI
     this.uikit.draw()
+
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [220, 220],
+    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+    //   scale: 0.5,
+    //   color: [1, 0, 0, 0.7],
+    //   outlineColor: [0.25, 0.25, 1, 1],
+    //   rotation: 0, //Math.PI / 6, // 30-degree rotation
+    //   maxWidth: 300 // Wrap to fit within 300px
+    // })
   }
   
   constructor(canvas: HTMLCanvasElement) {

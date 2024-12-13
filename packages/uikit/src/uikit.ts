@@ -226,12 +226,13 @@ export class UIKit {
     if ('width' in canvas.parentElement!) {
       canvas.width = (canvas.parentElement.width as number) * this.dpr
       // @ts-expect-error not sure why height is not defined for HTMLElement
-      canvas.height = this.canvas.parentElement.height * this.uiData.dpr
-    } else {
-      canvas.width = canvas.offsetWidth * this.dpr
-      canvas.height = canvas.offsetHeight * this.dpr
-    }
-
+      canvas.height = this.canvas.parentElement.height * this.dpr
+    } //else {
+    //   canvas.width = canvas.offsetWidth * this.dpr
+    //   canvas.height = canvas.offsetHeight * this.dpr
+    // }
+    // canvas.width = canvas.offsetWidth * this.dpr
+    // canvas.height = canvas.offsetHeight * this.dpr
     const bounds = new Rectangle(0, 0, canvas.width, canvas.height)
     this.quadTree.updateBoundary(bounds)
   }
@@ -299,7 +300,8 @@ export class UIKit {
   }
 
   public draw(leftTopWidthHeight?: Vec4, tags: string[] = []): void {
-    this.gl.viewport(0, 0, this.canvasWidth, this.canvasHeight)
+    const gl = this.gl
+    gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
 
     // Set up bounds for filtering and positioning
     // Retrieve components that match the specified tags and are within bounds
@@ -308,12 +310,35 @@ export class UIKit {
       tags,
       true // Match all specified tags
     )
+
+    // update layout for all container components
     for (const component of components) {
+      if(component instanceof BaseContainerComponent) {
+        component.updateLayout()
+      }      
+    }
+
+    const drawnComponents = new Set<IUIComponent>()
+
+    for (const component of components) {      
+      if(drawnComponents.has(component)) {
+        continue
+      }
+      drawnComponents.add(component)
+      
+      // container draws all children and skip all children if container is not visible
+      if(component instanceof BaseContainerComponent) {
+        for(const child of component.components) {
+          drawnComponents.add(child)
+        }
+      }
+
       // Align component within bounds if specified
       // component.align(bounds)
       // Draw the component using NVRenderer
       if (component.isVisible) {
         component.draw(this.renderer)
+        
       }
     }
   }
@@ -323,6 +348,8 @@ export class UIKit {
     if (this._redrawRequested) {
       this._redrawRequested()
     } else {
+      const gl = this.gl
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
       // no host
       this.draw()
     }
@@ -396,12 +423,13 @@ export class UIKit {
     const bounds = new Rectangle(0, 0, this.canvasWidth * this.dpr, this.canvasHeight * this.dpr)
     this.quadTree.updateBoundary(bounds)
 
-    const components = this.quadTree.getAllElements()
-    for (const component of components) {
-      if (typeof component.handleResize === 'function') {
-        component.handleResize()
-      }
-    }
+    // const components = this.quadTree.getAllElements()
+    // for (const component of components) {
+    //   if (typeof component.handleResize === 'function') {
+    //     component.handleResize()
+    //   }
+    // }
+    this.draw()
   }
 
   // Handler for pointer down events

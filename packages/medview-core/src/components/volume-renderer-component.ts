@@ -138,6 +138,8 @@ export class VolumeRendererComponent extends BaseUIComponent {
     gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0)
 
     gl.bindVertexArray(null)
+    // turn off scissor test again
+    gl.disable(gl.SCISSOR_TEST);
   }
 
   draw(_renderer: any): void {

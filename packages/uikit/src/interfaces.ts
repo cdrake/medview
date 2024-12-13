@@ -69,7 +69,7 @@ export interface BaseUIComponentConfig {
   position?: Vec2
   bounds?: Vec4
   scale?: number
-  margin?: number
+  alignmentOffset?: number
   requestRedraw?: () => void
 }
 
@@ -77,6 +77,7 @@ export interface BaseContainerComponentConfig extends BaseUIComponentConfig {
   canvas: HTMLCanvasElement
   isHorizontal?: boolean
   padding?: number
+  spacing?: number
   maxWidth?: number
   maxHeight?: number
 }

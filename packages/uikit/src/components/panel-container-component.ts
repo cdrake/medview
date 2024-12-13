@@ -1,60 +1,56 @@
-import { UIKRenderer } from '../uikrenderer'
-import { Color, Vec4 } from '../types'
 import { BaseContainerComponent } from './base-container-component'
-import { BaseContainerComponentConfig } from '../interfaces'
+import { Color, Vec4 } from '../types'
+import { UIKRenderer } from '../uikrenderer'
+import { BaseContainerComponentConfig, IUIComponent } from '../interfaces'
 
-interface PanelContainerConfig extends BaseContainerComponentConfig {
+export interface PanelContainerConfig extends BaseContainerComponentConfig {
   backgroundColor?: Color
   outlineColor?: Color
   outlineWidth?: number
+  gradientStartColor?: Color
+  gradientEndColor?: Color
 }
 
 export class PanelContainerComponent extends BaseContainerComponent {
   private backgroundColor: Color
   private outlineColor: Color
   private outlineWidth: number
+  private gradientStartColor: Color
+  private gradientEndColor: Color
 
   constructor(config: PanelContainerConfig) {
     super(config)
 
-    // Default styles
-    this.backgroundColor = config.backgroundColor ?? [1, 1, 1, 1] // White by default
-    this.outlineColor = config.outlineColor ?? [0, 0, 0, 1] // Black by default
-    this.outlineWidth = config.outlineWidth ?? 2 // Default outline width
+    this.backgroundColor = config.backgroundColor ?? [1, 1, 1, 1] // Default white
+    this.outlineColor = config.outlineColor ?? [0, 0, 0, 1] // Default black
+    this.outlineWidth = config.outlineWidth ?? 2 // Default 2px outline
+    this.gradientStartColor = config.gradientStartColor ?? this.backgroundColor
+    this.gradientEndColor = config.gradientEndColor ?? this.backgroundColor
+    this.className = 'PanelContainerComponent'
   }
 
-  /**
-   * Draws the container with a background color and outline.
-   * @param renderer - The UIKRenderer instance.
-   */
   draw(renderer: UIKRenderer): void {
     if (!this.isVisible) {
       return
     }
-
-    const [x, y, width, height] = this.getBounds()
-
-    // Draw the panel background
+    // console.log('bounds for panel', this.bounds)
+    // Draw background with gradient support
     renderer.drawRoundedRect({
-      bounds: [x, y, width, height],
-      fillColor: this.backgroundColor,
+      bounds: this.getBounds(),
+      fillColor: this.gradientStartColor,
       outlineColor: this.outlineColor,
-      cornerRadius: 10, // Default corner radius for rounded edges
-      thickness: this.outlineWidth
+      cornerRadius: 10, // Example corner radius
+      thickness: this.outlineWidth,
+      bottomColor: this.gradientEndColor
     })
 
     // Draw child components
-    this.components.forEach((component) => {
-      if (component.isVisible) {
-        component.draw(renderer)
+    for(const component of this.components) {
+      if(!component.isVisible) {
+        continue
       }
-    })
-  }
-
-  // Getters and setters for styles
-
-  getBackgroundColor(): Color {
-    return this.backgroundColor
+      component.draw(renderer)
+    }
   }
 
   setBackgroundColor(color: Color): void {
@@ -62,17 +58,9 @@ export class PanelContainerComponent extends BaseContainerComponent {
     this.requestRedraw?.()
   }
 
-  getOutlineColor(): Color {
-    return this.outlineColor
-  }
-
   setOutlineColor(color: Color): void {
     this.outlineColor = color
     this.requestRedraw?.()
-  }
-
-  getOutlineWidth(): number {
-    return this.outlineWidth
   }
 
   setOutlineWidth(width: number): void {
@@ -80,11 +68,29 @@ export class PanelContainerComponent extends BaseContainerComponent {
     this.requestRedraw?.()
   }
 
-  /**
-   * Update the layout and redraw the container.
-   */
-  updateLayout(): void {
-    super.updateLayout()
+  setGradient(startColor: Color, endColor: Color): void {
+    this.gradientStartColor = startColor
+    this.gradientEndColor = endColor
     this.requestRedraw?.()
+  }
+
+  getBackgroundColor(): Color {
+    return this.backgroundColor
+  }
+
+  getOutlineColor(): Color {
+    return this.outlineColor
+  }
+
+  getOutlineWidth(): number {
+    return this.outlineWidth
+  }
+
+  getGradientStartColor(): Color {
+    return this.gradientStartColor
+  }
+
+  getGradientEndColor(): Color {
+    return this.gradientEndColor
   }
 }

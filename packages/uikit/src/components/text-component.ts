@@ -26,44 +26,42 @@ export class TextComponent extends BaseUIComponent implements IColorable {
     this.width = size[0]
     this.height = size[1]
     this.bounds = [this.position[0], this.position[1], this.width, this.height]
+    this.className = 'TextComponent'    
   }
 
   fitBounds(targetBounds: Vec4): void {
-    // Check if maxWidth is set, and if so, adjust scale to fit within maxWidth first
-    if (this.maxWidth > 0) {
-      const textWidth = this.font.getTextWidth(this.text, 1) // Width at scale 1
-      const maxWidthScale = this.maxWidth / textWidth
+    const targetWidth = targetBounds[2]
+    const targetHeight = targetBounds[3]
 
-      // Adjust scale based on maxWidth
-      this.setScale(Math.min(this.scale, maxWidthScale))
-    }
+    // Set the maxWidth to the available width within the bounds
+    this.maxWidth = targetWidth
 
-    // Calculate the actual scaled width and height after applying maxWidth
-    this.width = this.font.getTextWidth(this.text, this.scale)
-    this.height = this.font.getTextHeight(this.text, this.scale)
+    // Calculate wrapped text dimensions based on new maxWidth
+    const size = this.font.getWordWrappedSize(this.text, this.scale, this.maxWidth)
+    this.width = size[0]
+    this.height = size[1]
 
     // Calculate scaling factors for the bounds
-    const scaleX = targetBounds[2] / this.width
-    const scaleY = targetBounds[3] / this.height
+    const scaleX = targetWidth / this.width
+    const scaleY = targetHeight / this.height
 
-    // Use the smaller of the two scales to fit within the target bounds
+    // Use the smaller of the two scales to ensure text fits within the bounds
     const newScale = Math.min(scaleX, scaleY, this.scale)
-
-    // Update the component's scale
     this.setScale(newScale)
 
-    // Recalculate width and height after scaling to fit target bounds
-    this.width = this.font.getTextWidth(this.text, this.scale)
-    this.height = this.font.getTextHeight(this.text, this.scale)
+    // Recalculate dimensions with the adjusted scale
+    const wordWrappedSize = this.font.getWordWrappedSize(this.text, this.scale, this.maxWidth)
+    this.width = wordWrappedSize[0]
+    this.height = wordWrappedSize[1]
 
-    // Calculate centered position within target bounds
-    const offsetX = targetBounds[0] + (targetBounds[2] - this.width) / 2
-    const offsetY = targetBounds[1] + (targetBounds[3] - this.height) / 2
+    // Center the text within the bounds
+    const offsetX = targetBounds[0] // + (targetWidth - this.width) / 2
+    const offsetY = targetBounds[1] // + (targetHeight - this.height) / 2
 
-    // Set new position and bounds
     this.setPosition([offsetX, offsetY])
     this.setBounds([offsetX, offsetY, this.width, this.height])
-  }
+}
+
 
   updateBounds(): void {
     const size = this.font.getWordWrappedSize(this.text, this.scale, this.maxWidth)
@@ -78,6 +76,7 @@ export class TextComponent extends BaseUIComponent implements IColorable {
   }
 
   draw(renderer: UIKRenderer): void {
+    console.log('text position', this.position)
     renderer.drawText({
       font: this.font,
       position: this.position,

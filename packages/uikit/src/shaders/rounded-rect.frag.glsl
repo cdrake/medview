@@ -2,7 +2,8 @@
 precision highp int;
 precision highp float;
 
-uniform vec4 fillColor;
+uniform vec4 topColor; // Color at the top of the rectangle
+uniform vec4 bottomColor; // Color at the bottom of the rectangle
 uniform vec4 borderColor;
 uniform vec4 leftTopWidthHeight; // x, y, width, height
 uniform float thickness; // line thickness in pixels
@@ -53,7 +54,11 @@ void main() {
     float edgeAlpha = smoothstep(-aa, aa, dist + thickness * 0.5) - smoothstep(-aa, aa, dist - thickness * 0.5);
     float cornerAlpha = smoothstep(0.0, aa, -dist);
 
-    vec4 finalColor = mix(fillColor, borderColor, edgeAlpha);
+    // Interpolate gradient color based on the fragment's vertical position
+    float gradientFactor = (fragCoord.y - bottom) / (top - bottom);
+    vec4 gradientColor = mix(bottomColor, topColor, gradientFactor);
+
+    vec4 finalColor = mix(gradientColor, borderColor, edgeAlpha);
     finalColor.a *= cornerAlpha;
 
     color = finalColor;

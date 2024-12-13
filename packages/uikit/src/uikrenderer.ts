@@ -537,6 +537,10 @@ public drawCircle({
     if (!UIKRenderer.rotatedFontShader) {
       throw new Error('rotatedTextShader undefined')
     }
+
+    // console.log('text color is ', color)
+    console.log('draw rotated text at ', xy)
+    const dpr = window.devicePixelRatio || 1.0
   
     const rotatedFontShader = UIKRenderer.rotatedFontShader
     const gl = this._gl
@@ -560,7 +564,7 @@ public drawCircle({
   
     // Calculate screen pixel range
     let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
-    screenPxRange *= window.devicePixelRatio || 1.0 // Adjust for DPR
+    // screenPxRange *= window.devicePixelRatio || 1.0 // Adjust for DPR
     gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
   
     // Convert outline thickness to NDC, considering DPR
@@ -581,7 +585,7 @@ public drawCircle({
     mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
   
     // Split text into lines based on maxWidth
-    const size = font.textHeight * Math.min(gl.canvas.height, gl.canvas.width) * scale
+    const size = font.textHeight * gl.canvas.height * scale
     const words = str.split(' ')
     const lines: string[] = []
   
@@ -611,11 +615,11 @@ public drawCircle({
     // Calculate perpendicular offset for each line
     const perpendicularX = -Math.sin(rotation) * lineHeight
     const perpendicularY = Math.cos(rotation) * lineHeight
-  
+    console.log('perpendicular x and y',perpendicularX, perpendicularY )
     // Start from the first line's base position
     let baselineX = xy[0]
     let baselineY = xy[1]
-  
+    console.log('dpr', dpr)
     lines.forEach((line) => {
       // Apply rotation to the whole line's starting position
       const modelMatrix = mat4.create()
@@ -623,16 +627,20 @@ public drawCircle({
       mat4.rotateZ(modelMatrix, modelMatrix, rotation)
   
       let currentX = 0 // Start X position relative to the line
+      
       for (const char of Array.from(line)) {
         const metrics = font.fontMets!.mets[char]
         if (!metrics) {
           continue
         }
-  
+        // console.log('rotation offsets', Math.sin(rotation) * metrics.lbwh[1] * size,-Math.cos(rotation) * metrics.lbwh[1] * size )
+        const horizontalOffset = Math.sin(rotation) * metrics.lbwh[1] * size
+        const verticalOffset =  -Math.cos(rotation) * metrics.lbwh[1] * size
+
         const charModelMatrix = mat4.clone(modelMatrix)
         mat4.translate(charModelMatrix, charModelMatrix, [
-          currentX + Math.sin(rotation) * metrics.lbwh[1] * size,
-          -Math.cos(rotation) * metrics.lbwh[1] * size,
+          currentX + horizontalOffset,
+          verticalOffset,
           0.0
         ])
         mat4.scale(charModelMatrix, charModelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
@@ -686,7 +694,7 @@ public drawCircle({
     color?: Color
     maxWidth?: number
   }): void {
-    // Use the existing drawRotatedText method with default rotation and outline parameters
+    // Use the existing drawRotatedText method with default rotation and outline parameters    
     this.drawRotatedText({
       font,
       xy: position,
@@ -703,51 +711,62 @@ public drawCircle({
   
   
   /**
-   * Draws a rounded rectangle.
-   * @param leftTopWidthHeight - The bounding box of the rounded rectangle (left, top, width, height).
-   * @param fillColor - The fill color of the rectangle.
-   * @param outlineColor - The outline color of the rectangle.
-   * @param cornerRadius - The corner radius.
-   * @param thickness - The thickness of the outline.
-   */
-  public drawRoundedRect(config: {
-    bounds: Vec4
-    fillColor: Color
-    outlineColor: Color
-    cornerRadius?: number
-    thickness?: number
-  }): void {
-    const { bounds, fillColor, outlineColor, cornerRadius = -1, thickness = 10 } = config
+ * Draws a rounded rectangle with an optional gradient background.
+ * @param bounds - The bounding box of the rounded rectangle (left, top, width, height).
+ * @param fillColor - The fill color or top color of the rectangle.
+ * @param outlineColor - The outline color of the rectangle.
+ * @param bottomColor - The bottom color for the gradient. Defaults to fillColor.
+ * @param cornerRadius - The corner radius.
+ * @param thickness - The thickness of the outline.
+ */
+public drawRoundedRect(config: {
+  bounds: Vec4
+  fillColor: Color
+  outlineColor: Color
+  bottomColor?: Color
+  cornerRadius?: number
+  thickness?: number
+}): void {
+  const {
+    bounds,
+    fillColor,
+    outlineColor,
+    bottomColor = fillColor, // Default bottom color to fillColor
+    cornerRadius = -1,
+    thickness = 10
+  } = config
 
-    if (!UIKRenderer.roundedRectShader) {
-      throw new Error('roundedRectShader undefined')
-    }
-
-    const gl = this._gl
-
-    // Use the rounded rectangle shader program
-    UIKRenderer.roundedRectShader.use(gl)
-
-    // Enable blending for transparency
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-    // Set the necessary uniforms
-    const shader = UIKRenderer.roundedRectShader
-    const adjustedCornerRadius = cornerRadius === -1 ? thickness * 2 : cornerRadius
-
-    const rectParams = Array.isArray(bounds) ? vec4.fromValues(bounds[0], bounds[1], bounds[2], bounds[3]) : bounds
-
-    this._gl.uniform1f(shader.uniforms.thickness, thickness)
-    this._gl.uniform1f(shader.uniforms.cornerRadius, adjustedCornerRadius)
-    this._gl.uniform4fv(shader.uniforms.borderColor, outlineColor as Float32List)
-    this._gl.uniform4fv(shader.uniforms.fillColor, fillColor as Float32List)
-    this._gl.uniform2fv(shader.uniforms.canvasWidthHeight, [this._gl.canvas.width, this._gl.canvas.height])
-    this._gl.uniform4fv(shader.uniforms.leftTopWidthHeight, rectParams as Float32List)
-    this._gl.bindVertexArray(UIKRenderer.genericVAO)
-    this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4)
-    this._gl.bindVertexArray(null)
+  if (!UIKRenderer.roundedRectShader) {
+    throw new Error('roundedRectShader undefined')
   }
+  console.log('rounded rect being drawn at', bounds)
+  const gl = this._gl
+
+  // Use the rounded rectangle shader program
+  UIKRenderer.roundedRectShader.use(gl)
+
+  // Enable blending for transparency
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+  // Set the necessary uniforms
+  const shader = UIKRenderer.roundedRectShader
+  const adjustedCornerRadius = cornerRadius === -1 ? thickness * 2 : cornerRadius
+
+  const rectParams = Array.isArray(bounds) ? vec4.fromValues(bounds[0], bounds[1], bounds[2], bounds[3]) : bounds
+
+  this._gl.uniform1f(shader.uniforms.thickness, thickness)
+  this._gl.uniform1f(shader.uniforms.cornerRadius, adjustedCornerRadius)
+  this._gl.uniform4fv(shader.uniforms.borderColor, outlineColor as Float32List)
+  this._gl.uniform4fv(shader.uniforms.topColor, fillColor as Float32List) // Use fillColor as top color
+  this._gl.uniform4fv(shader.uniforms.bottomColor, bottomColor as Float32List) // Bottom color for gradient
+  this._gl.uniform2fv(shader.uniforms.canvasWidthHeight, [this._gl.canvas.width, this._gl.canvas.height])
+  this._gl.uniform4fv(shader.uniforms.leftTopWidthHeight, rectParams as Float32List)
+  this._gl.bindVertexArray(UIKRenderer.genericVAO)
+  this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4)
+  this._gl.bindVertexArray(null)
+}
+
   
   /**
    * Draws a ruler with length text, units, and hash marks.
