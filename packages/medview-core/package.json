@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "@medview/uikit": "file:../uikit",
+    "gl-matrix": "^3.4.3",
     "nifti-reader-js": "^0.6.8"
   },
   "exports": {

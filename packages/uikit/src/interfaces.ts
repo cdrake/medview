@@ -48,6 +48,8 @@ export interface IUIComponent {
   handlePointerEnter?: (event: PointerEvent) => void
   handlePointerMove?: (event: PointerEvent) => void
   handlePointerLeave?: (event: PointerEvent) => void
+  handleResize?: () => void
+  handleWheelScroll?: (event: WheelEvent) => void
 
   alignmentPoint: AlignmentPoint
   verticalAlignment: VerticalAlignment
@@ -63,7 +65,7 @@ export interface BaseUIComponentConfig {
   zIndex?: number
   id?: string
   tags?: string[]
-  className: string
+  className?: string
   position?: Vec2
   bounds?: Vec4
   scale?: number
