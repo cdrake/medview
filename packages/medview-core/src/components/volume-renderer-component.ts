@@ -90,6 +90,16 @@ export class VolumeRendererComponent extends BaseUIComponent {
       return
     }
 
+    const bounds = this.bounds // Use the component's bounds for scissor box
+
+    // Enable scissor test and set scissor box
+    gl.enable(gl.SCISSOR_TEST)
+    const scissorX = Math.round(bounds[0])
+    const scissorY = Math.round(gl.canvas.height - bounds[1] - bounds[3]) // Flip Y for WebGL's coordinate system
+    const scissorWidth = Math.round(bounds[2])
+    const scissorHeight = Math.round(bounds[3])
+    gl.scissor(scissorX, scissorY, scissorWidth, scissorHeight)
+
     // Update projection matrix
     this.updateOrthoProjectionMatrix()
 

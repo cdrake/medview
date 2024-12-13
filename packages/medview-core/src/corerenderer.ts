@@ -41,13 +41,25 @@ export class CoreRenderer {
 
     // Create UIKShader
 
+    // Calculate bounds for the center square of a tic-tac-toe grid
+    const canvasWidth = gl.canvas.width
+    const canvasHeight = gl.canvas.height
+    const cellWidth = canvasWidth / 3
+    const cellHeight = canvasHeight / 3
+    const centerBounds: [number, number, number, number] = [
+      cellWidth, // x
+      cellHeight, // y
+      cellWidth, // width
+      cellHeight // height
+    ]
+
     // Instantiate VolumeRendererComponent
     const volumeRenderer = new VolumeRendererComponent({
       gl,
       niftiLoader,
       cuboidShader: this.cuboidShader!,
-      position: [0, 0],
-      bounds: [0, 0, this.gl.canvas.width, this.gl.canvas.height],
+      position: [cellWidth, cellHeight],
+      bounds: centerBounds,
       alignmentPoint: UIKit.alignmentPoint.MIDDLECENTER
     })
     // volumeRenderer.setTranslateOffset(0, 0, -50)
