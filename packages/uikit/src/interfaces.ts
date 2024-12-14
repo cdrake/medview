@@ -145,6 +145,11 @@ export interface ColorbarComponentConfig extends BaseUIComponentConfig {
   minMax?: [number, number]
   colormapName?: string
   bounds: Vec4
+  font: UIKFont
+  tickSpacing?: number
+  tickLength?: number
+  tickColor?: Color
+  labelColor?: Color
 }
 
 export interface ContainerButtonComponentConfig extends BaseContainerComponentConfig {

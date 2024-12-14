@@ -1,4 +1,4 @@
-import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
@@ -63,7 +63,6 @@ export class CoreRenderer {
       bounds: centerBounds,
       alignmentPoint: UIKit.alignmentPoint.MIDDLECENTER
     })
-    // volumeRenderer.setTranslateOffset(0, 0, -50)
     // Add VolumeRendererComponent to UIKit
     this.uikit.addComponent(volumeRenderer)
 
@@ -110,20 +109,28 @@ export class CoreRenderer {
     // Add the panel to UIKit
     this.uikit.addComponent(panelContainer)
 
+    // Add ColorbarComponent
+    const colorbar = new ColorbarComponent({
+      gl,
+      minMax: [0, 100],
+      colormapName: 'viridis',
+      bounds: [620, 10, 400, 50],
+      font: this.defaultFont,
+      tickSpacing: 5,
+      tickLength: 15,
+      tickColor: [0, 0, 0, 1], // Black
+      labelColor: [0, 0, 0, 1], // Black
+      alignmentPoint: AlignmentPoint.BOTTOMCENTER      
+    })
+
+    await colorbar.init()
+
+    // Add ColorbarComponent to UIKit
+    this.uikit.addComponent(colorbar)
+
     // Render the UI
     this.uikit.draw()
-
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont!,
-    //   xy: [220, 220],
-    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
-    //   scale: 0.5,
-    //   color: [1, 0, 0, 0.7],
-    //   outlineColor: [0.25, 0.25, 1, 1],
-    //   rotation: 0, //Math.PI / 6, // 30-degree rotation
-    //   maxWidth: 300 // Wrap to fit within 300px
-    // })
-  }
+}
   
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas

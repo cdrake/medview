@@ -17,13 +17,15 @@ import rotatedFontVert from './shaders/rotated-font.vert.glsl'
 import rotatedFontFrag from './shaders/rotated-font.frag.glsl'
 import boxVert from './shaders/box.vert.glsl'
 import boxFrag from './shaders/box.frag.glsl'
-import { Vec4, Color, LineTerminator, LineStyle, Vec2 } from './types.js'
+import { Vec4, Color, LineTerminator, LineStyle, Vec2, HorizontalAlignment } from './types.js'
 import { UIKFont } from './assets/uikfont.js'
 import { UIKBitmap } from './assets/uikbitmap.js'
 import { UIKSVG } from './assets/uiksvg.js'
 import { ToggleComponent } from './components/toggle-component.js'
 import { RulerComponent } from './components/ruler-component.js'
 import { SliderComponent } from './components/slider-component.js'
+import { tickSpacing } from './utilities/graph-utilities'
+
 
 export class UIKRenderer {
   private _gl: WebGL2RenderingContext
@@ -352,7 +354,7 @@ public drawCircle({
       dashDotLength = 5
     } = config
     const gl = this._gl
-
+    
     // Extract start and end points
     const lineCoords = Array.isArray(startEnd)
       ? vec4.fromValues(startEnd[0], startEnd[1], startEnd[2], startEnd[3])
@@ -417,6 +419,7 @@ public drawCircle({
       UIKRenderer.lineShader.use(gl)
       gl.enable(gl.BLEND)
       gl.uniform4fv(UIKRenderer.lineShader.uniforms.lineColor, color as Float32List)
+      console.log('line color drawLine', color)
       gl.uniform2fv(UIKRenderer.lineShader.uniforms.canvasWidthHeight, [gl.canvas.width, gl.canvas.height])
       gl.uniform1f(UIKRenderer.lineShader.uniforms.thickness, thickness)
       gl.uniform4fv(UIKRenderer.lineShader.uniforms.startXYendXY, shortenedLine)
@@ -472,7 +475,7 @@ public drawCircle({
   private drawSegment(config: { segmentCoords: Vec4; thickness: number; color: Color }): void {
     const { segmentCoords, thickness, color } = config
     const gl = this._gl
-
+    console.log('line color line segment', color)
     UIKRenderer.lineShader.use(gl)
     gl.uniform4fv(UIKRenderer.lineShader.uniforms.lineColor, color as Float32List)
     gl.uniform1f(UIKRenderer.lineShader.uniforms.thickness, thickness)
@@ -538,10 +541,6 @@ public drawCircle({
       throw new Error('rotatedTextShader undefined')
     }
 
-    // console.log('text color is ', color)
-    console.log('draw rotated text at ', xy)
-    const dpr = window.devicePixelRatio || 1.0
-  
     const rotatedFontShader = UIKRenderer.rotatedFontShader
     const gl = this._gl
   
@@ -615,11 +614,11 @@ public drawCircle({
     // Calculate perpendicular offset for each line
     const perpendicularX = -Math.sin(rotation) * lineHeight
     const perpendicularY = Math.cos(rotation) * lineHeight
-    console.log('perpendicular x and y',perpendicularX, perpendicularY )
+    // console.log('perpendicular x and y',perpendicularX, perpendicularY )
     // Start from the first line's base position
     let baselineX = xy[0]
     let baselineY = xy[1]
-    console.log('dpr', dpr)
+    // console.log('dpr', dpr)
     lines.forEach((line) => {
       // Apply rotation to the whole line's starting position
       const modelMatrix = mat4.create()
@@ -739,9 +738,8 @@ public drawRoundedRect(config: {
   if (!UIKRenderer.roundedRectShader) {
     throw new Error('roundedRectShader undefined')
   }
-  console.log('rounded rect being drawn at', bounds)
   const gl = this._gl
-
+  console.log('outline color', outlineColor)
   // Use the rounded rectangle shader program
   UIKRenderer.roundedRectShader.use(gl)
 
@@ -881,47 +879,131 @@ public drawRoundedRect(config: {
     gl.bindVertexArray(null)
   }
 
-  /**
-   * Draws a color bar with gradient and tick labels.
-   * @param params - Object containing parameters for rendering the color bar.
-   * @param params.font - Font used for rendering labels.
-   * @param params.position - Position of the color bar [x, y].
-   * @param params.size - Size of the color bar [width, height].
-   * @param params.gradientTexture - Texture for gradient if applicable.
-   * @param params.labels - Array of labels for tick marks.
-   */
-  public drawColorbar({
-    position,
-    size,
-    gradientTexture
-  }: {
-    position: Vec2
-    size: Vec2
-    gradientTexture: WebGLTexture
-  }): void {
-    const gl = this._gl
-    const [x, y] = position
-    const [width, height] = size
+ /**
+ * Draws a color bar with a gradient, tick marks, and corresponding labels.
+ * 
+ * @param config - Configuration object for the color bar.
+ * @property position - The `[x, y]` coordinates of the top-left corner of the color bar.
+ * @property size - The `[width, height]` dimensions of the color bar.
+ * @property gradientTexture - A WebGL texture representing the gradient of the color bar.
+ * @property minMax - A tuple `[min, max]` defining the range of values for the color bar.
+ * @property tickSpacing - The number of divisions or intervals for the tick marks.
+ * @property tickLength - The length of each tick mark in pixels.
+ * @property tickColor - The color of the tick marks.
+ * @property labelColor - The color of the text labels.
+ * @property font - The font used for rendering the text labels.
+ * 
+ * @example
+ * ```typescript
+ * const colorbarConfig = {
+ *   position: [50, 50] as Vec2,
+ *   size: [400, 50] as Vec2,
+ *   gradientTexture: gradientTexture, // A WebGL texture generated elsewhere
+ *   minMax: [-10, 10],
+ *   tickSpacing: 5,
+ *   tickLength: 10,
+ *   tickColor: [0, 0, 0, 1], // Black tick marks
+ *   labelColor: [0.1, 0.1, 0.1, 1], // Gray labels
+ *   font: defaultFont // A loaded UIKFont instance
+ * }
+ * 
+ * renderer.drawColorbar(colorbarConfig)
+ * ```
+ */
+ public drawColorbar({
+  position,
+  size,
+  gradientTexture,
+  minMax,
+  tickLength = 5,
+  tickColor = [0, 0, 0, 1],
+  labelColor = [0, 0, 0, 1],
+  font,
+  labelAlignment = HorizontalAlignment.CENTER,
+  labelOffset = 5
+}: {
+  position: Vec2
+  size: Vec2
+  gradientTexture: WebGLTexture
+  minMax: [number, number]
+  tickLength?: number
+  tickColor?: Color
+  labelColor?: Color
+  font: UIKFont
+  labelAlignment?: HorizontalAlignment
+  labelOffset?: number
+}): void {
+  const gl = this._gl
+  const [x, y] = position
+  const [width, height] = size
 
-    // Use the colorbarShader for rendering
-    UIKRenderer.colorbarShader.use(gl)
+  // Draw the outline
+  const bounds = [...position, ...size] as [number, number, number, number]
+  const delta = 5
+  bounds[0] -= delta
+  bounds[1] -= delta
+  bounds[2] += delta * 2
+  bounds[3] += delta * 2
+  this.drawRoundedRect({bounds, fillColor: [0,0,0,0], outlineColor: tickColor, cornerRadius: 0 })
 
-    // Set up uniforms for the colorbar shader
-    gl.uniform2fv(UIKRenderer.colorbarShader.uniforms.canvasWidthHeight, [gl.canvas.width, gl.canvas.height])
-    gl.uniform4fv(UIKRenderer.colorbarShader.uniforms.leftTopWidthHeight, [x, y, width, height])
 
-    // Bind the gradient texture
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, gradientTexture)
-    gl.uniform1i(UIKRenderer.colorbarShader.uniforms.gradientTexture, 0) // Assumes gradient texture is bound to TEXTURE0
+  // Draw the gradient background
+  UIKRenderer.colorbarShader.use(gl)
+  gl.uniform2fv(UIKRenderer.colorbarShader.uniforms.canvasWidthHeight, [gl.canvas.width, gl.canvas.height])
+  gl.uniform4fv(UIKRenderer.colorbarShader.uniforms.leftTopWidthHeight, [x, y, width, height])
+  gl.activeTexture(gl.TEXTURE0)
+  gl.bindTexture(gl.TEXTURE_2D, gradientTexture)
+  gl.uniform1i(UIKRenderer.colorbarShader.uniforms.gradientTexture, 0)
+  gl.bindVertexArray(UIKRenderer.genericVAO)
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+  gl.bindVertexArray(null)
 
-    // Bind VAO and draw color bar rectangle
-    gl.bindVertexArray(UIKRenderer.genericVAO)
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-    // Unbind texture and VAO after drawing
-    gl.bindTexture(gl.TEXTURE_2D, null)
-    gl.bindVertexArray(null)
+  // Calculate tick spacing using `tickSpacing`
+  const [tickStep, start, end] = tickSpacing(minMax[0], minMax[1])
+
+  // Draw tick marks and labels
+  for (let value = start; value <= end; value += tickStep) {
+    const normalizedPosition = (value - minMax[0]) / (minMax[1] - minMax[0])
+    const tickX = x + normalizedPosition * width
+
+    // Draw tick mark
+    this.drawLine({
+      startEnd: [tickX, y + height, tickX, y + height + tickLength],
+      thickness: 1,
+      color: tickColor
+    })
+
+    // Draw label directly under the tick mark
+    const label = value.toFixed(1) // Customize precision as needed
+    const textWidth = font.getTextWidth(label, 1.0)
+    let labelX = tickX
+
+    switch (labelAlignment) {
+      case HorizontalAlignment.CENTER:
+        labelX -= textWidth / 4
+        break
+      case HorizontalAlignment.RIGHT:
+        labelX -= textWidth / 2
+        break
+      case HorizontalAlignment.LEFT:
+      default:
+        // No adjustment needed
+        break
+    }
+
+    // Label's Y position is under the tick mark, adjusted by `labelOffset`
+    const labelY = y + height + tickLength + labelOffset + 20
+
+    this.drawText({
+      font,
+      position: [labelX, labelY],
+      text: label,
+      color: labelColor,
+      scale: 0.5 // Adjust scale as needed
+    })
   }
+}
+
 
   /**
  * Draws an SVG on the canvas using the generated WebGL texture.

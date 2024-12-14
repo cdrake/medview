@@ -76,7 +76,6 @@ export class TextComponent extends BaseUIComponent implements IColorable {
   }
 
   draw(renderer: UIKRenderer): void {
-    console.log('text position', this.position)
     renderer.drawText({
       font: this.font,
       position: this.position,
