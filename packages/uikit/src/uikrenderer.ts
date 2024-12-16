@@ -618,6 +618,8 @@ public drawCircle({
     // Start from the first line's base position
     let baselineX = xy[0]
     let baselineY = xy[1]
+    console.log('xy', xy)
+
     // console.log('dpr', dpr)
     lines.forEach((line) => {
       // Apply rotation to the whole line's starting position
@@ -634,7 +636,8 @@ public drawCircle({
         }
         // console.log('rotation offsets', Math.sin(rotation) * metrics.lbwh[1] * size,-Math.cos(rotation) * metrics.lbwh[1] * size )
         const horizontalOffset = Math.sin(rotation) * metrics.lbwh[1] * size
-        const verticalOffset =  -Math.cos(rotation) * metrics.lbwh[1] * size
+        const verticalOffset =  -Math.cos(rotation) * metrics.lbwh[1] * size + size
+        console.log('h, v offsets', horizontalOffset, verticalOffset)        
 
         const charModelMatrix = mat4.clone(modelMatrix)
         mat4.translate(charModelMatrix, charModelMatrix, [
@@ -684,6 +687,7 @@ public drawCircle({
     text,
     scale = 1.0,
     color = [0, 0, 0, 1],
+    outlineColor = [0, 0, 0, 0],
     maxWidth = 0
   }: {
     font: UIKFont
@@ -691,6 +695,7 @@ public drawCircle({
     text: string
     scale?: number
     color?: Color
+    outlineColor?: Color
     maxWidth?: number
   }): void {
     // Use the existing drawRotatedText method with default rotation and outline parameters    
@@ -701,7 +706,7 @@ public drawCircle({
       scale,
       color,
       rotation: 0, // No rotation
-      outlineColor: [0, 0, 0, 0], // No outline
+      outlineColor,
       outlineThickness: 0, // No outline thickness
       maxWidth
     })
@@ -763,6 +768,83 @@ public drawRoundedRect(config: {
   this._gl.bindVertexArray(UIKRenderer.genericVAO)
   this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4)
   this._gl.bindVertexArray(null)
+}
+
+/**
+   * Draws a text box with customizable text, colors, and margins.
+   * @param params - Object containing parameters for rendering the text box.
+   * @param params.font - The font object for rendering the text.
+   * @param params.xy - The position of the top-left corner of the text box.
+   * @param params.str - The text to render inside the text box.
+   * @param params.textColor - The color of the text. Defaults to black with full opacity.
+   * @param params.outlineColor - The color of the box's outline. Defaults to white with full opacity.
+   * @param params.fillColor - The fill color of the box. Defaults to a transparent black.
+   * @param params.margin - The margin between the text and the edges of the box. Defaults to 15.
+   * @param params.roundness - The roundness of the box corners (0 to 1). Defaults to 0 (square corners).
+   * @param params.scale - The scaling factor for the text. Defaults to 1.0.
+   * @param params.maxWidth - The maximum width for text wrapping. Defaults to 0 (no wrapping).
+   * @param params.fontOutlineColor - The outline color for the text. Defaults to black.
+   */
+public drawTextBox({
+  font,
+  xy,
+  text,
+  textColor = [0, 0, 0, 1.0],
+  outlineColor = [1.0, 1.0, 1.0, 1.0],
+  fillColor = [0.0, 0.0, 0.0, 0.3],
+  margin = 15,
+  roundness = 0.0,
+  scale = 1.0,
+  maxWidth = 0,
+  fontOutlineColor = [0, 0, 0, 1],
+}: {
+  font: UIKFont
+  xy: Vec2
+  text: string
+  textColor?: Color
+  outlineColor?: Color
+  fillColor?: Color
+  margin?: number
+  roundness?: number
+  scale?: number
+  maxWidth?: number
+  fontOutlineColor?: Color
+  fontOutlineThickness?: number
+}): void {
+  const dpr = window.devicePixelRatio || 1
+  scale *= dpr
+  const textHeight = font.getTextHeight(text, scale)
+  const wrappedSize = font.getWordWrappedSize(text, scale, maxWidth)
+  const rectWidth = wrappedSize[0] + 2 * margin * scale + textHeight
+  const rectHeight = wrappedSize[1] + 4 * margin * scale // Height of the rectangle enclosing the text
+
+  const leftTopWidthHeight = [xy[0], xy[1], rectWidth, rectHeight] as [number, number, number, number]
+  this.drawRoundedRect({
+    bounds: leftTopWidthHeight,
+    fillColor,
+    outlineColor,
+    cornerRadius: (Math.min(1.0, roundness) / 2) * Math.min(leftTopWidthHeight[2], leftTopWidthHeight[3]),
+    thickness: 5 // Add thickness parameter to match drawRoundedRect signature
+  })
+  const descenderDepth = font.getDescenderDepth(text, scale)
+
+  const size = font.textHeight * this.gl.canvas.height * scale
+  // Adjust the position of the text with a margin, ensuring it's vertically centered
+  const textPosition = [
+    leftTopWidthHeight[0] + margin * scale + textHeight / 2,
+    leftTopWidthHeight[1] + 2 * margin * scale + textHeight - size + descenderDepth
+  ] as [number, number]
+
+  // Render the text
+  this.drawText({
+    font,
+    position: textPosition,
+    text,
+    scale,
+    color: textColor,
+    maxWidth,
+    outlineColor: fontOutlineColor,
+  })
 }
 
   
@@ -992,7 +1074,7 @@ public drawRoundedRect(config: {
     }
 
     // Label's Y position is under the tick mark, adjusted by `labelOffset`
-    const labelY = y + height + tickLength + labelOffset + 20
+    const labelY = y + height + tickLength + labelOffset
 
     this.drawText({
       font,

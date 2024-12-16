@@ -64,7 +64,7 @@ export class CoreRenderer {
       alignmentPoint: UIKit.alignmentPoint.MIDDLECENTER
     })
     // Add VolumeRendererComponent to UIKit
-    this.uikit.addComponent(volumeRenderer)
+    // this.uikit.addComponent(volumeRenderer)
 
     // Create a PanelContainerComponent with Apple-themed gradient
     const panelContainer = new PanelContainerComponent({
@@ -130,6 +130,19 @@ export class CoreRenderer {
 
     // Render the UI
     this.uikit.draw()
+
+    this.renderer.drawTextBox({font: this.defaultFont, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [100, 400], // Starting position of the text
+      str: 'Hello, MedView!', // The string to render
+      scale: 0.50, // Scale factor
+      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      outlineColor: [0, 0, 0, 1], // Outline color (black)
+      outlineThickness: 2 // Outline thickness
+    })
 }
   
   constructor(canvas: HTMLCanvasElement) {
