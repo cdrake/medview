@@ -65,10 +65,12 @@ export abstract class BaseUIComponent implements IUIComponent {
     this.tags = config.tags ?? []
     this.className = config.className || 'None'
     this.position = config.position ?? [0, 0]
-    this.bounds = config.bounds ?? [0, 0, 0, 0]
+    this.bounds = config.bounds ?? [this.position[0],this.position[1], 0, 0]
     this.scale = config.scale ?? 1
     this.alignmentOffset = config.alignmentOffset ?? 25
     this.requestRedraw = config.requestRedraw
+
+    console.log('config on base ui comp', config)
   }
 
   align(bounds: Vec4): void {

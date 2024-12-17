@@ -15,6 +15,7 @@ export class TextBoxComponent extends BaseUIComponent implements IColorable {
   protected maxWidth: number
   protected width: number
   protected height: number
+  protected innerMargin: number
 
   constructor(config: TextBoxComponentConfig) {
     super(config)
@@ -27,6 +28,7 @@ export class TextBoxComponent extends BaseUIComponent implements IColorable {
     this.outlineWidth = config.outlineWidth ?? 1
     this.scale = config.scale ?? 1.0
     this.maxWidth = config.maxWidth ?? 0
+    this.innerMargin = config.innerMargin ?? 15
 
     const size = this.font.getWordWrappedSize(this.text, this.scale, this.maxWidth)
     this.width = size[0]
@@ -49,9 +51,17 @@ export class TextBoxComponent extends BaseUIComponent implements IColorable {
 
   updateBounds(): void {
     const size = this.font.getWordWrappedSize(this.text, this.scale, this.maxWidth)
-    this.width = size[0]
-    this.height = size[1]
-    this.setBounds([this.position[0], this.position[1], size[0], size[1]])
+    
+    const dpr = window.devicePixelRatio || 1
+    let scale = this.scale
+    scale *= dpr
+    const textHeight = this.font.getTextHeight(this.text, scale)
+    const wrappedSize = this.font.getWordWrappedSize(this.text, scale, this.maxWidth)
+    const rectWidth = wrappedSize[0] + 2 * this.innerMargin * scale + textHeight
+    const rectHeight = wrappedSize[1] + 4 * this.innerMargin * scale
+    this.width = rectWidth
+    this.height = rectHeight
+    this.setBounds([this.position[0], this.position[1], rectWidth, rectHeight])
   }
 
   getBounds(): Vec4 {
@@ -59,25 +69,8 @@ export class TextBoxComponent extends BaseUIComponent implements IColorable {
     return this.bounds
   }
 
-  draw(renderer: UIKRenderer): void {
-    // Draw the rounded rectangle as background
-    renderer.drawRoundedRect({
-      bounds: this.bounds,
-      fillColor: this.backgroundColor,
-      outlineColor: this.outlineColor,
-      cornerRadius: this.cornerRadius,
-      thickness: this.outlineWidth
-    })
-
-    // Draw text on top of the background
-    renderer.drawText({
-      font: this.font,
-      position: this.position,
-      text: this.text,
-      scale: this.scale,
-      color: this.textColor,
-      maxWidth: this.maxWidth
-    })
+  draw(renderer: UIKRenderer): void {    
+    renderer.drawTextBox({font: this.font, xy: this.position, text: this.text, roundness: this.cornerRadius, scale: this.scale, maxWidth: this.maxWidth, fontOutlineColor: this.outlineColor})
   }
 
   getTextColor(): Color {

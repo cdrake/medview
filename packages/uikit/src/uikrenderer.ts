@@ -637,7 +637,6 @@ public drawCircle({
         // console.log('rotation offsets', Math.sin(rotation) * metrics.lbwh[1] * size,-Math.cos(rotation) * metrics.lbwh[1] * size )
         const horizontalOffset = Math.sin(rotation) * metrics.lbwh[1] * size
         const verticalOffset =  -Math.cos(rotation) * metrics.lbwh[1] * size + size
-        console.log('h, v offsets', horizontalOffset, verticalOffset)        
 
         const charModelMatrix = mat4.clone(modelMatrix)
         mat4.translate(charModelMatrix, charModelMatrix, [

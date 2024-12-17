@@ -1,4 +1,4 @@
-import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint, ButtonComponent } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
@@ -109,7 +109,10 @@ export class CoreRenderer {
     // Add the panel to UIKit
     this.uikit.addComponent(panelContainer)
 
+    
+
     // Add ColorbarComponent
+    await ColorbarComponent.loadColorTables()
     const colorbar = new ColorbarComponent({
       gl,
       minMax: [0, 100],
@@ -122,11 +125,31 @@ export class CoreRenderer {
       labelColor: [0, 0, 0, 1], // Black
       alignmentPoint: AlignmentPoint.BOTTOMCENTER      
     })
-
     await colorbar.init()
 
     // Add ColorbarComponent to UIKit
     this.uikit.addComponent(colorbar)
+
+    const button = new ButtonComponent({
+      font: this.defaultFont!, // Use the default font loaded in CoreRenderer
+      position: [300, 400], // Position the button at (300, 400)
+      text: 'Click Me', // Button text
+      textColor: [1.0, 1.0, 1.0, 1.0], // White text
+      backgroundColor: [0.0, 0.5, 1.0, 1.0], // Blue button background
+      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
+      // outlineThickness: 2, // Outline thickness
+      highlightColor: [0.7, 0.7, 0.7, 1.0], // Light gray highlight color on hover
+      buttonDownColor: [0.0, 0.4, 0.8, 1.0], // Darker blue on button down
+      onClick: (event: PointerEvent) => {
+        console.log('Button clicked!', event)
+        alert('Button clicked!')
+      },
+      scale: 0.7, // Default scale
+      // margin: 20, // Padding inside the button
+      // roundness: 0.5 // Rounded corners (50% roundness)
+    })
+
+    this.uikit.addComponent(button)
 
     // Render the UI
     this.uikit.draw()

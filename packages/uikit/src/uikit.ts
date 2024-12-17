@@ -252,6 +252,7 @@ export class UIKit {
 
   // Method to add a component to the QuadTree
   public addComponent(component: IUIComponent): void {
+    console.log('adding component', component)
     if (component instanceof BaseContainerComponent) {
       component.quadTree = this.quadTree
     }
@@ -398,10 +399,14 @@ export class UIKit {
   }
 
   public processPointerUp(x: number, y: number, event: PointerEvent): void {
+    console.log('pointer up', x, y, event)
     const point: Vec2 = [x, y]
     const components = this.quadTree.queryPoint(point)
+    const currentComponents = this.getComponents()
+    console.log('current components', currentComponents)
     for (const component of components) {
       if (component.isVisible) {
+        console.log('component at click', component)
         component.applyEventEffects('pointerup', event)
         if (typeof component.handlePointerUp === 'function') {
           component.handlePointerUp(event)
@@ -449,9 +454,10 @@ export class UIKit {
       // console.log('current click time', currentClickTime)
       const elapsed = currentClickTime - this.lastClickTime
       // console.log('elapsed', elapsed)
-      if (elapsed > 200) {
+      // if (elapsed > 200) {
         this.processPointerUp(pos.x, pos.y, event)
-      }
+        // this.processPointerUp(event.clientX, event.clientY, event)
+      // }
       this.lastClickTime = currentClickTime
       this.activePointers.delete(event.pointerId)
     }

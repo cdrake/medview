@@ -31,10 +31,16 @@ export class ColorbarComponent extends BaseUIComponent {
     
   }
 
-  async init() {
+  static async loadColorTables() {
     if (!ColorbarComponent.colorTables) {
       ColorbarComponent.colorTables = new ColorTables()
       await ColorbarComponent.colorTables.loadColormaps()
+    }
+  }
+
+  async init() {
+    if (!ColorbarComponent.colorTables) {
+      await ColorbarComponent.loadColorTables()
     }
     this.gradientTexture = this.generateColorMapTexture(this.gl, this._colormapName)
   }
