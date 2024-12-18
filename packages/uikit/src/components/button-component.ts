@@ -14,7 +14,8 @@ export class ButtonComponent extends TextBoxComponent {
     this.highlightColor = config.highlightColor ?? [0.5, 0.5, 0.5, 1.0]
     this.buttonDownColor = config.buttonDownColor ?? [0.529, 0.808, 0.98, 1.0] // Light blue color
     this.onClick = config.onClick
-    console.log('button bounds', this.bounds)
+    this.className = "Button"
+    // console.log('button bounds', this.bounds)
     // Adding click effects to create a bounce animation
 
     // Effect 1: Shrink button on pointer up (bounce effect)
@@ -47,7 +48,7 @@ this.addEventEffect({
 this.addEventEffect({
   event: 'pointerdown',
   targetObject: this,
-  property: 'fillColor',
+  property: 'backgroundColor',
   effectType: 'setValue',
   valueOrFrom: this.buttonDownColor // target color for mouse down
 })
@@ -56,7 +57,7 @@ this.addEventEffect({
 this.addEventEffect({
   event: 'pointerenter',
   targetObject: this,
-  property: 'fillColor',
+  property: 'backgroundColor',
   effectType: 'setValue',
   valueOrFrom: this.highlightColor // target color for mouse enter
 })
@@ -65,7 +66,7 @@ this.addEventEffect({
 this.addEventEffect({
   event: 'pointerleave',
   targetObject: this,
-  property: 'fillColor',
+  property: 'backgroundColor',
   effectType: 'setValue',
   valueOrFrom: config.backgroundColor ?? [0, 0, 0, 0.3] // revert to original fill color
 })
