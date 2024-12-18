@@ -20,7 +20,7 @@ export abstract class BaseUIComponent implements IUIComponent {
   protected position: Vec2 = [0, 0]
   protected bounds: Vec4 = [0, 0, 0, 0]
   protected scale: number = 1
-  protected margin: number = 25
+  protected alignmentOffset: number = 25
   private eventEffects: Map<string, Effect[]> = new Map()
   private eventListeners: Map<string, Array<(event: Event) => void>> = new Map()
   public requestRedraw?: () => void
@@ -65,32 +65,34 @@ export abstract class BaseUIComponent implements IUIComponent {
     this.tags = config.tags ?? []
     this.className = config.className || 'None'
     this.position = config.position ?? [0, 0]
-    this.bounds = config.bounds ?? [0, 0, 0, 0]
+    this.bounds = config.bounds ?? [this.position[0],this.position[1], 0, 0]
     this.scale = config.scale ?? 1
-    this.margin = config.margin ?? 25
+    this.alignmentOffset = config.alignmentOffset ?? 25
     this.requestRedraw = config.requestRedraw
+
+    console.log('config on base ui comp', config)
   }
 
   align(bounds: Vec4): void {
     let offsetX = 0
     let offsetY = 0
-
+    console.log('align called on ', this)
     // Calculate alignment offsets based on alignmentPoint
     switch (this.alignmentPoint) {
       case AlignmentPoint.TOPLEFT:
-        offsetX = bounds[0] + this.margin
-        offsetY = bounds[1] + this.margin
+        offsetX = bounds[0] + this.alignmentOffset
+        offsetY = bounds[1] + this.alignmentOffset
         break
       case AlignmentPoint.TOPCENTER:
-        offsetX = bounds[0] + (bounds[2] - this.bounds[2]) / 2 + this.margin
-        offsetY = bounds[1] + this.margin
+        offsetX = bounds[0] + (bounds[2] - this.bounds[2]) / 2 + this.alignmentOffset
+        offsetY = bounds[1] + this.alignmentOffset
         break
       case AlignmentPoint.TOPRIGHT:
-        offsetX = bounds[0] + (bounds[2] - this.bounds[2] - this.margin)
-        offsetY = bounds[1] + this.margin
+        offsetX = bounds[0] + (bounds[2] - this.bounds[2] - this.alignmentOffset)
+        offsetY = bounds[1] + this.alignmentOffset
         break
       case AlignmentPoint.MIDDLELEFT:
-        offsetX = bounds[0] + this.margin
+        offsetX = bounds[0] + this.alignmentOffset
         offsetY = bounds[1] + (bounds[3] - this.bounds[3]) / 2
         break
       case AlignmentPoint.MIDDLECENTER:
@@ -98,20 +100,20 @@ export abstract class BaseUIComponent implements IUIComponent {
         offsetY = bounds[1] + (bounds[3] - this.bounds[3]) / 2
         break
       case AlignmentPoint.MIDDLERIGHT:
-        offsetX = bounds[0] + (bounds[2] - this.bounds[2] - this.margin)
+        offsetX = bounds[0] + (bounds[2] - this.bounds[2] - this.alignmentOffset)
         offsetY = bounds[1] + (bounds[3] - this.bounds[3]) / 2
         break
       case AlignmentPoint.BOTTOMLEFT:
-        offsetX = bounds[0] + this.margin
-        offsetY = bounds[1] + (bounds[3] - this.bounds[3] - this.margin)
+        offsetX = bounds[0] + this.alignmentOffset
+        offsetY = bounds[1] + (bounds[3] - this.bounds[3] - this.alignmentOffset)
         break
       case AlignmentPoint.BOTTOMCENTER:
         offsetX = bounds[0] + (bounds[2] - this.bounds[2]) / 2
-        offsetY = bounds[1] + (bounds[3] - this.bounds[3] - this.margin)
+        offsetY = bounds[1] + (bounds[3] - this.bounds[3] - this.alignmentOffset)
         break
       case AlignmentPoint.BOTTOMRIGHT:
-        offsetX = bounds[0] + (bounds[2] - this.bounds[2] - this.margin)
-        offsetY = bounds[1] + (bounds[3] - this.bounds[3] - this.margin)
+        offsetX = bounds[0] + (bounds[2] - this.bounds[2] - this.alignmentOffset)
+        offsetY = bounds[1] + (bounds[3] - this.bounds[3] - this.alignmentOffset)
         break
       default:
         offsetX = bounds[0]
@@ -330,6 +332,9 @@ export abstract class BaseUIComponent implements IUIComponent {
   setBounds(bounds: Vec4): void {
     this.bounds = bounds
     this.position = vec2.fromValues(bounds[0], bounds[1])
+    if(this.className === 'PanelContainerComponent') {
+      console.log('bounds set', bounds)
+    }
     // Trigger a resize event with the updated bounds as the contentRect
     this.triggerResizeEvent()
   }
@@ -357,6 +362,15 @@ export abstract class BaseUIComponent implements IUIComponent {
 
   setAlignmentPoint(value: AlignmentPoint): void {
     this.alignmentPoint = value
+  }
+
+  setAlignmentOffset(offset: number): void {
+    this.alignmentOffset = offset
+    this.requestRedraw?.()
+  }
+
+  getAlignmentOffset(): number {
+    return this.alignmentOffset
   }
 
   getVerticalAlignment(): VerticalAlignment {

@@ -2,7 +2,7 @@ import { UIKRenderer } from '../uikrenderer'
 import { Vec2, Vec3, Color, LineTerminator } from '../types'
 import { IProjectable2D, RulerComponentConfig } from '../interfaces'
 import { UIKFont } from '../assets/uikfont'
-import { BaseUIComponent } from './baseuicomponent'
+import { BaseUIComponent } from './base-ui-component'
 
 export class RulerComponent extends BaseUIComponent implements IProjectable2D {
   modelPlanePoints: Vec2[] // Array to hold start and end points in model space

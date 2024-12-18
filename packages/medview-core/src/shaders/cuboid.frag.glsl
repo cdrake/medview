@@ -43,6 +43,7 @@ void main() {
 
     // Map intensity to grayscale color
     // fragColor = vec4(intensity, intensity, intensity, 1.0);
+    // fragColor = texture(uVolumeTexture, fTexCoord);
     fragColor = vec4(fTexCoord, 1.0); 
 }
 

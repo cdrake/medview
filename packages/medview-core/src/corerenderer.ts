@@ -1,4 +1,4 @@
-import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint, ButtonComponent } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
@@ -35,6 +35,7 @@ export class CoreRenderer {
 
     // Initialize NiftiMeshLoader
     const niftiLoader = new NiftiMeshLoader(gl)
+    await niftiLoader.init()
     const [header, volumeData] = await niftiLoader.loadFile('./images/mni152.nii')
     niftiLoader.createTexture(header, volumeData, 'viridis')
     niftiLoader.createCuboidVAO(header, this.cuboidShader!)
@@ -49,8 +50,8 @@ export class CoreRenderer {
     const centerBounds: [number, number, number, number] = [
       cellWidth, // x
       cellHeight, // y
-      cellWidth, // width
-      cellHeight // height
+      cellWidth + 200, // width
+      cellHeight + 200 // height
     ]
 
     // Instantiate VolumeRendererComponent
@@ -58,17 +59,114 @@ export class CoreRenderer {
       gl,
       niftiLoader,
       cuboidShader: this.cuboidShader!,
-      position: [cellWidth, cellHeight],
+      position: [0, 0],
       bounds: centerBounds,
       alignmentPoint: UIKit.alignmentPoint.MIDDLECENTER
     })
-    // volumeRenderer.setTranslateOffset(0, 0, -50)
     // Add VolumeRendererComponent to UIKit
-    this.uikit.addComponent(volumeRenderer)
+    // this.uikit.addComponent(volumeRenderer)
+
+    // Create a PanelContainerComponent with Apple-themed gradient
+    const panelContainer = new PanelContainerComponent({
+      canvas: this.canvas,
+      position: [0, 0],
+      bounds: [210, 10, 400, 200],
+      backgroundColor: [1, 1, 1, 1],
+      gradientStartColor: [0.0, 0.478, 1.0, 0.4], // Apple blue
+      gradientEndColor: [0.0, 0.698, 1.0, 1.0], // Slightly lighter blue
+      outlineColor: [0.0, 0.0, 0.0, 1.0],
+      outlineWidth: 2,
+      padding: 35,
+      isHorizontal: false
+    })
+
+    // Load the default font if not already loaded
+    if (!this.defaultFont) {
+      this.defaultFont = new UIKFont(gl)
+      await this.defaultFont.loadDefaultFont()
+    }
+
+    // Add some text components to the panel
+    const text1 = new TextComponent({
+      position: [20, 20],
+      text: 'Welcome to UIKit!',
+      font: this.defaultFont,
+      textColor: [1, 1, 1, 1],
+      scale: 0.7
+    })
+
+    const text2 = new TextComponent({
+      position: [20, 60],
+      text: 'Experience the future of medical visualization.',
+      font: this.defaultFont,
+      textColor: [1, 1, 1, 1],
+      scale: 0.5
+    })
+
+    panelContainer.addComponent(text1)
+    panelContainer.addComponent(text2)
+
+    // Add the panel to UIKit
+    this.uikit.addComponent(panelContainer)
+
+    
+
+    // Add ColorbarComponent
+    await ColorbarComponent.loadColorTables()
+    const colorbar = new ColorbarComponent({
+      gl,
+      minMax: [0, 100],
+      colormapName: 'viridis',
+      bounds: [620, 10, 400, 50],
+      font: this.defaultFont,
+      tickSpacing: 5,
+      tickLength: 15,
+      tickColor: [0, 0, 0, 1], // Black
+      labelColor: [0, 0, 0, 1], // Black
+      alignmentPoint: AlignmentPoint.BOTTOMCENTER      
+    })
+    await colorbar.init()
+
+    // Add ColorbarComponent to UIKit
+    this.uikit.addComponent(colorbar)
+
+    const button = new ButtonComponent({
+      font: this.defaultFont!, // Use the default font loaded in CoreRenderer
+      position: [300, 400], // Position the button at (300, 400)
+      text: 'Click Me', // Button text
+      textColor: [1.0, 1.0, 1.0, 1.0], // White text
+      backgroundColor: [0.0, 0.5, 1.0, 1.0], // Blue button background
+      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
+      // outlineThickness: 2, // Outline thickness
+      highlightColor: [0.7, 0.7, 0.7, 1.0], // Light gray highlight color on hover
+      buttonDownColor: [0.0, 0.4, 0.8, 1.0], // Darker blue on button down
+      onClick: (event: PointerEvent) => {
+        console.log('Button clicked!', event)
+        alert('Button clicked!')
+      },
+      scale: 0.7, // Default scale
+      // margin: 20, // Padding inside the button
+      // roundness: 0.5 // Rounded corners (50% roundness)
+    })
+
+    this.uikit.addComponent(button)
 
     // Render the UI
     this.uikit.draw()
-  }
+
+    this.renderer.drawTextBox({font: this.defaultFont, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [100, 400], // Starting position of the text
+      str: 'Hello, MedView!', // The string to render
+      scale: 0.50, // Scale factor
+      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      outlineColor: [0, 0, 0, 1], // Outline color (black)
+      outlineThickness: 2 // Outline thickness
+    })
+}
   
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
