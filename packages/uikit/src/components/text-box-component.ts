@@ -70,7 +70,7 @@ export class TextBoxComponent extends BaseUIComponent implements IColorable {
   }
 
   draw(renderer: UIKRenderer): void {    
-    renderer.drawTextBox({font: this.font, xy: this.position, text: this.text, roundness: this.cornerRadius, scale: this.scale, maxWidth: this.maxWidth, fontOutlineColor: this.outlineColor})
+    renderer.drawTextBox({font: this.font, xy: this.position, text: this.text, fillColor: this.backgroundColor, roundness: this.cornerRadius, scale: this.scale, maxWidth: this.maxWidth, fontOutlineColor: this.outlineColor})
   }
 
   getTextColor(): Color {
