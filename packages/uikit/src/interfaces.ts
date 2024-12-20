@@ -48,6 +48,8 @@ export interface IUIComponent {
   handlePointerEnter?: (event: PointerEvent) => void
   handlePointerMove?: (event: PointerEvent) => void
   handlePointerLeave?: (event: PointerEvent) => void
+  handleResize?: () => void
+  handleWheelScroll?: (event: WheelEvent) => void
 
   alignmentPoint: AlignmentPoint
   verticalAlignment: VerticalAlignment
@@ -63,11 +65,11 @@ export interface BaseUIComponentConfig {
   zIndex?: number
   id?: string
   tags?: string[]
-  className: string
+  className?: string
   position?: Vec2
   bounds?: Vec4
   scale?: number
-  margin?: number
+  alignmentOffset?: number
   requestRedraw?: () => void
 }
 
@@ -75,6 +77,7 @@ export interface BaseContainerComponentConfig extends BaseUIComponentConfig {
   canvas: HTMLCanvasElement
   isHorizontal?: boolean
   padding?: number
+  spacing?: number
   maxWidth?: number
   maxHeight?: number
 }
@@ -94,9 +97,10 @@ export interface TextComponentConfig extends BaseUIComponentConfig {
 
 export interface TextBoxComponentConfig extends TextComponentConfig {
   outlineColor?: Color
-  fillColor?: Color
+  outlineWidth?: number
+  backgroundColor?: Color
   innerMargin?: number
-  roundness?: number
+  cornerRadius?: number
   fontOutlineColor?: Color
   fontOutlineThickness?: number
 }
@@ -141,6 +145,11 @@ export interface ColorbarComponentConfig extends BaseUIComponentConfig {
   minMax?: [number, number]
   colormapName?: string
   bounds: Vec4
+  font: UIKFont
+  tickSpacing?: number
+  tickLength?: number
+  tickColor?: Color
+  labelColor?: Color
 }
 
 export interface ContainerButtonComponentConfig extends BaseContainerComponentConfig {

@@ -1,4 +1,4 @@
-import { Rectangle, QuadTree } from './quadtree.js'
+import { Rectangle, QuadTree } from './quadtree'
 import {
   Vec2,
   Vec4,
@@ -10,13 +10,13 @@ import {
   HorizontalAlignment,
   VerticalAlignment,
   Plane
-} from './types.js'
-import { UIKRenderer } from './uikrenderer.js'
-import { UIKFont } from './assets/uikfont.js'
-import { UIKBitmap } from './assets/uikbitmap.js'
-import { BaseContainerComponent } from './components/basecontainercomponent.js'
-import { AnimationManager } from './animationmanager.js'
-import { IUIComponent } from './interfaces.js'
+} from './types'
+import { UIKRenderer } from './uikrenderer'
+import { UIKFont } from './assets/uikfont'
+import { UIKBitmap } from './assets/uikbitmap'
+import { BaseContainerComponent } from './components/base-container-component'
+import { AnimationManager } from './animationmanager'
+import { IUIComponent } from './interfaces'
 
 
 export class UIKit {
@@ -126,6 +126,9 @@ export class UIKit {
     const mqString = `(resolution: ${window.devicePixelRatio}dppx)`
     const media = matchMedia(mqString)
     media.addEventListener('change', this.handleUpdatedPixelRatio.bind(this))
+
+    // Add event listener for wheel (scroll) events
+    canvas.addEventListener('wheel', this.handleWheel.bind(this))
   }
 
    /**
@@ -188,6 +191,24 @@ export class UIKit {
       
     }
   }
+
+  private handleWheel(event: WheelEvent): void {
+    event.preventDefault()
+
+    const { clientX, clientY } = event
+    const point: Vec2 = [clientX * this.dpr, clientY * this.dpr]
+
+    // Query components under the mouse pointer
+    const components = this.quadTree.queryPoint(point).filter((component) => component.isVisible)
+
+    for (const component of components) {
+      // Check if the component has a zoom handler
+      if (typeof component.handleWheelScroll === 'function') {
+        component.handleWheelScroll(event)
+      }
+    }
+  }
+
   /**
    * callback function to handle resize window events, redraws the scene.
    * @internal
@@ -205,12 +226,13 @@ export class UIKit {
     if ('width' in canvas.parentElement!) {
       canvas.width = (canvas.parentElement.width as number) * this.dpr
       // @ts-expect-error not sure why height is not defined for HTMLElement
-      canvas.height = this.canvas.parentElement.height * this.uiData.dpr
-    } else {
-      canvas.width = canvas.offsetWidth * this.dpr
-      canvas.height = canvas.offsetHeight * this.dpr
-    }
-
+      canvas.height = this.canvas.parentElement.height * this.dpr
+    } //else {
+    //   canvas.width = canvas.offsetWidth * this.dpr
+    //   canvas.height = canvas.offsetHeight * this.dpr
+    // }
+    // canvas.width = canvas.offsetWidth * this.dpr
+    // canvas.height = canvas.offsetHeight * this.dpr
     const bounds = new Rectangle(0, 0, canvas.width, canvas.height)
     this.quadTree.updateBoundary(bounds)
   }
@@ -230,6 +252,7 @@ export class UIKit {
 
   // Method to add a component to the QuadTree
   public addComponent(component: IUIComponent): void {
+    console.log('adding component', component)
     if (component instanceof BaseContainerComponent) {
       component.quadTree = this.quadTree
     }
@@ -278,7 +301,8 @@ export class UIKit {
   }
 
   public draw(leftTopWidthHeight?: Vec4, tags: string[] = []): void {
-    this.gl.viewport(0, 0, this.canvasWidth, this.canvasHeight)
+    const gl = this.gl
+    gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
 
     // Set up bounds for filtering and positioning
     // Retrieve components that match the specified tags and are within bounds
@@ -287,12 +311,35 @@ export class UIKit {
       tags,
       true // Match all specified tags
     )
+
+    // update layout for all container components
     for (const component of components) {
+      if(component instanceof BaseContainerComponent) {
+        component.updateLayout()
+      }      
+    }
+
+    const drawnComponents = new Set<IUIComponent>()
+
+    for (const component of components) {      
+      if(drawnComponents.has(component)) {
+        continue
+      }
+      drawnComponents.add(component)
+      
+      // container draws all children and skip all children if container is not visible
+      if(component instanceof BaseContainerComponent) {
+        for(const child of component.components) {
+          drawnComponents.add(child)
+        }
+      }
+
       // Align component within bounds if specified
       // component.align(bounds)
       // Draw the component using NVRenderer
       if (component.isVisible) {
         component.draw(this.renderer)
+        
       }
     }
   }
@@ -302,6 +349,8 @@ export class UIKit {
     if (this._redrawRequested) {
       this._redrawRequested()
     } else {
+      const gl = this.gl
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
       // no host
       this.draw()
     }
@@ -350,10 +399,14 @@ export class UIKit {
   }
 
   public processPointerUp(x: number, y: number, event: PointerEvent): void {
+    console.log('pointer up', x, y, event)
     const point: Vec2 = [x, y]
     const components = this.quadTree.queryPoint(point)
+    const currentComponents = this.getComponents()
+    console.log('current components', currentComponents)
     for (const component of components) {
       if (component.isVisible) {
+        console.log('component at click', component)
         component.applyEventEffects('pointerup', event)
         if (typeof component.handlePointerUp === 'function') {
           component.handlePointerUp(event)
@@ -374,6 +427,14 @@ export class UIKit {
 
     const bounds = new Rectangle(0, 0, this.canvasWidth * this.dpr, this.canvasHeight * this.dpr)
     this.quadTree.updateBoundary(bounds)
+
+    // const components = this.quadTree.getAllElements()
+    // for (const component of components) {
+    //   if (typeof component.handleResize === 'function') {
+    //     component.handleResize()
+    //   }
+    // }
+    this.draw()
   }
 
   // Handler for pointer down events
@@ -382,20 +443,21 @@ export class UIKit {
     if (pos) {
       this.activePointers.set(event.pointerId, [pos.x, pos.y])
       this.processPointerDown(pos.x, pos.y, event)
-    }
+    }    
   }
 
   private handlePointerUp(event: PointerEvent): void {
     const pos = this.getCanvasRelativePosition(event)
     if (pos) {
-      console.log('handle click called')
+      // console.log('handle click called')
       const currentClickTime = performance.now()
-      console.log('current click time', currentClickTime)
+      // console.log('current click time', currentClickTime)
       const elapsed = currentClickTime - this.lastClickTime
-      console.log('elapsed', elapsed)
-      if (elapsed > 200) {
+      // console.log('elapsed', elapsed)
+      // if (elapsed > 200) {
         this.processPointerUp(pos.x, pos.y, event)
-      }
+        // this.processPointerUp(event.clientX, event.clientY, event)
+      // }
       this.lastClickTime = currentClickTime
       this.activePointers.delete(event.pointerId)
     }
@@ -465,7 +527,7 @@ export class UIKit {
   }
 
   private handlePan(dx: number, dy: number): void {
-    console.log('Pan delta:', dx, dy)
+    // console.log('Pan delta:', dx, dy)
     // Add your pan logic here
   }
 
