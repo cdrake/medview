@@ -1,4 +1,4 @@
-import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint, ButtonComponent } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint, ButtonComponent, HorizontalAlignment } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
@@ -226,39 +226,40 @@ export class CoreRenderer {
     //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
     // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
     color = [0, 0, 0, 1]     
-    this.renderer.drawRotatedText({
-      font: this.mtsdfFont!,
-      xy: [100, 400], // Starting position of the text
-      str: 'Hello, MTSDF', // The string to render
-      scale: 0.50, // Scale factor
-      color, // Text color (orange)
-      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
-      isOutline: true // Outline thickness
-    })
+    // this.renderer.drawRotatedText({
+    //   font: this.mtsdfFont!,
+    //   xy: [100, 400], // Starting position of the text
+    //   str: 'Hello, MTSDF', // The string to render
+    //   scale: 0.50, // Scale factor
+    //   color, // Text color (orange)
+    //   rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   isOutline: true // Outline thickness
+    // })
 
-    color = [0.0, 0.478, 1.0, 0.4]
-    this.renderer.drawRotatedText({
-      font: this.mtsdfFont!,
-      xy: [400, 400], // Starting position of the text
-      str: 'Hello, MTSDF', // The string to render
-      scale: 1.50, // Scale factor
-      color, //[0.3, 0.75, 0.75, 1.0], // Text color (orange)
-      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-      // outlineColor: null, //[0, 0, 0, 1], // Outline color (black)
-      isOutline: true // Outline thickness
-    })
+    // color = [0.0, 0.478, 1.0, 0.4]
+    // this.renderer.drawRotatedText({
+    //   font: this.mtsdfFont!,
+    //   xy: [400, 400], // Starting position of the text
+    //   str: 'Hello, MTSDF', // The string to render
+    //   scale: 1.50, // Scale factor
+    //   color, //[0.3, 0.75, 0.75, 1.0], // Text color (orange)
+    //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   // outlineColor: null, //[0, 0, 0, 1], // Outline color (black)
+    //   isOutline: true // Outline thickness
+    // })
 
     color = [1, 1, 1, 1] // [0.0, 0.478, 1.0, 1.0]
     this.renderer.drawRotatedText({
       font: this.defaultFont!,
-      xy: [150, 200],
+      xy: [250, 200],
       str: 'This is a long string that will wrap if it exceeds the max width.',
       scale: 1.0,
       color,
       // outlineColor: [0.25, 0.25, 1, 1],
       rotation: -Math.PI / 6, // 30-degree rotation
       maxWidth: 300, // Wrap to fit within 300px
-      isOutline: true
+      isOutline: true,
+      alignment: HorizontalAlignment.LEFT
     })
 
   }

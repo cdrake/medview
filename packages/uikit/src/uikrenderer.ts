@@ -25,8 +25,6 @@ import { ToggleComponent } from './components/toggle-component.js'
 import { RulerComponent } from './components/ruler-component.js'
 import { SliderComponent } from './components/slider-component.js'
 import { tickSpacing } from './utilities/graph-utilities'
-import mtsdfFrag from './shaders/mtsdf.frag.glsl'
-import mtsdfVert from './shaders/mtsdf.vert.glsl'
 
 export class UIKRenderer {
   private _gl: WebGL2RenderingContext
@@ -43,7 +41,6 @@ export class UIKRenderer {
   protected static genericVAO: WebGLVertexArrayObject
   protected static triangleVertexBuffer: WebGLBuffer
   protected static fullScreenVAO: WebGLVertexArrayObject
-  protected static mtsdfFontShader: UIKShader
 
   get gl(): WebGL2RenderingContext {
     return this._gl
@@ -87,10 +84,6 @@ export class UIKRenderer {
     // Initialize the box shader
     if (!UIKRenderer.boxShader) {
       UIKRenderer.boxShader = new UIKShader(gl, boxVert, boxFrag)
-    }
-
-    if(!UIKRenderer.mtsdfFontShader) {
-      UIKRenderer.mtsdfFontShader = new UIKShader(gl, mtsdfVert, mtsdfFrag)
     }
 
     if (!UIKRenderer.genericVAO) {
@@ -532,7 +525,8 @@ public drawCircle({
     rotation = 0.0,
     outlineColor = null,
     isOutline = false,
-    maxWidth = 0 // Default to 0, meaning no wrapping
+    maxWidth = 0, // Default to 0, meaning no wrapping
+    alignment = HorizontalAlignment.LEFT
   }: {
     font: UIKFont
     xy: Vec2
@@ -543,6 +537,7 @@ public drawCircle({
     outlineColor?: Color | null
     isOutline?: boolean
     maxWidth?: number
+    alignment?: HorizontalAlignment
   }): void {
     if (!font.isFontLoaded) {
       throw new Error('font not loaded')
@@ -640,9 +635,31 @@ public drawCircle({
 
     // console.log('dpr', dpr)
     lines.forEach((line) => {
-      // Apply rotation to the whole line's starting position
+      // Calculate the line's total width
+      const lineWidth = font.getTextWidth(line, scale)
+    
+      // Determine alignment offset considering rotation
+      let alignmentOffsetX = 0
+      let alignmentOffsetY = 0
+      switch (alignment) {
+        case HorizontalAlignment.CENTER:
+          alignmentOffsetX = -Math.cos(rotation) * lineWidth / 2
+          alignmentOffsetY = -Math.sin(rotation) * lineWidth / 2
+          break
+        case HorizontalAlignment.RIGHT:
+          alignmentOffsetX = -Math.cos(rotation) * lineWidth
+          alignmentOffsetY = -Math.sin(rotation) * lineWidth
+          break
+        case HorizontalAlignment.LEFT:
+        default:
+          alignmentOffsetX = 0
+          alignmentOffsetY = 0
+          break
+      }
+    
+      // Apply rotation and adjusted alignment offset to the line's starting position
       const modelMatrix = mat4.create()
-      mat4.translate(modelMatrix, modelMatrix, [baselineX, baselineY, 0.0])
+      mat4.translate(modelMatrix, modelMatrix, [baselineX + alignmentOffsetX, baselineY + alignmentOffsetY, 0.0])
       mat4.rotateZ(modelMatrix, modelMatrix, rotation)
     
       let currentX = 0 // Start X position relative to the line
@@ -685,9 +702,10 @@ public drawCircle({
       }
     
       // Move the baseline for the next line along the perpendicular axis
-      baselineX += -Math.sin(rotation) * lineHeight
-      baselineY += Math.cos(rotation) * lineHeight
+      baselineX += perpendicularX
+      baselineY += perpendicularY
     })
+    
     
   
     // Unbind the VAO
@@ -739,130 +757,7 @@ public drawCircle({
     })
   }
 
-  // public drawMTSDFText({
-  //   font,
-  //   xy,
-  //   str,
-  //   scale = 1.0,
-  //   color = [1.0, 0.0, 0.0, 1.0],
-  //   rotation = 0.0,
-  //   outlineColor = [0, 0, 0, 1.0],
-  //   outlineThickness = 2,
-  //   maxWidth = 0, // Default to 0, meaning no wrapping
-  //   isOutlined = false
-  // }: {
-  //   font: UIKFont
-  //   xy: Vec2
-  //   str: string
-  //   scale?: number
-  //   color?: Color
-  //   rotation?: number
-  //   outlineColor?: Color
-  //   outlineThickness?: number
-  //   maxWidth?: number
-  //   isOutlined?: boolean
-  // }): void {
-  //   if (font.textHeight <= 0) {
-  //     return
-  //   }
-  //   if (!UIKRenderer.mtsdfFontShader) {
-  //     throw new Error('mtsdfFontShader undefined')
-  //   }
-  //   UIKRenderer.mtsdfFontShader.use(this.gl)
-  
-  //   // Calculate size based on font's textHeight
-  //   const size = font.textHeight * this.gl.canvas.height * scale //font.textHeight
-  //   this.gl.enable(this.gl.BLEND)
-  //   this.gl.uniform2f(UIKRenderer.mtsdfFontShader.uniforms.canvasWidthHeight, this.gl.canvas.width, this.gl.canvas.height)
-  
-  //   // Set colors and outline properties
-  //   this.gl.uniform4fv(UIKRenderer.mtsdfFontShader.uniforms.fontColor, color)
-  //   // this.gl.uniform4fv(UIKRenderer.mtsdfFontShader.uniforms.outlineColor, outlineColor)
-  //   // this.gl.uniform1f(UIKRenderer.mtsdfFontShader.uniforms.outlineThickness, outlineThickness)
-  
-  //   // let screenPxRange = (size / font.fontMets!.size) * font.fontMets!.distanceRange
-  //   let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
-  //   screenPxRange = Math.max(screenPxRange, 1.0)
-  //   this.gl.uniform1f(UIKRenderer.mtsdfFontShader.uniforms.screenPxRange, screenPxRange)
-  //   this.gl.uniform1i(UIKRenderer.mtsdfFontShader.uniforms.isOutline, isOutlined ? 1 : 0)
-  //   // Encode the string to UTF-8 bytes
-  //   const bytes = new TextEncoder().encode(str)
-  //   this.gl.bindVertexArray(UIKRenderer.genericVAO)
-  //   console.log('font', font)
-    
-  //   // for (let i = 0; i < str.length; i++) {
-  //   for(const char of Array.from(str)) {
-  //     // const char = bytes[i]
-  //     const metrics = font.fontMets!.mets[char]
-  //     console.log('font metrics for ', char, metrics)
-  //     const l = xy[0] + size * metrics.lbwh[0]
-  //     const b = -(size * metrics.lbwh[1])
-  //     const w = size * metrics.lbwh[2]
-  //     const h = size * metrics.lbwh[3]
-  //     const t = xy[1] + (b - h) + size
-  
-  //     // Apply rotation (if any)
-  //     // const cosR = Math.cos(rotation)
-  //     // const sinR = Math.sin(rotation)
-  //     // const rotatedX = xy[0] * cosR - xy[1] * sinR
-  //     // const rotatedY = xy[0] * sinR + xy[1] * cosR
-  
-  //     // this.gl.uniform4f(UIKRenderer.mtsdfFontShader.uniforms.leftTopWidthHeight, rotatedX + l, rotatedY + t, w, h)
-  //     this.gl.uniform4f(UIKRenderer.mtsdfFontShader.uniforms.leftTopWidthHeight, l, t, w, h)
-  //     this.gl.uniform4fv(UIKRenderer.mtsdfFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
-  //     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-  
-  //     xy[0] += size * metrics.xadv
-  //   }
-  
-  //   this.gl.bindVertexArray(null)
-  // }
-  
-  // not included in public docs
-  drawChar(font: UIKFont, xy: number[], scale: number, char: string): number {
-    if (!UIKRenderer.mtsdfFontShader) {
-      throw new Error('fontShader undefined')
-    }
-    // draw single character, never call directly: ALWAYS call from drawText()
-    const metrics = font.fontMets!.mets[char]!
-    const l = xy[0] + scale * metrics.lbwh[0]
-    const b = -(scale * metrics.lbwh[1])
-    const w = scale * metrics.lbwh[2]
-    const h = scale * metrics.lbwh[3]
-    const t = xy[1] + (b - h) + scale
-    this.gl.uniform4f(UIKRenderer.mtsdfFontShader.uniforms.leftTopWidthHeight, l, t, w, h)
-    this.gl.uniform4fv(UIKRenderer.mtsdfFontShader.uniforms.uvLeftTopWidthHeight!, metrics.uv_lbwh)
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-    return scale * metrics.xadv
-  }
-
-  drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
-    
-    if (!UIKRenderer.mtsdfFontShader) {
-      throw new Error('fontShader undefined')
-    }
-    UIKRenderer.mtsdfFontShader.use(this.gl)
-    // let size = this.opts.textHeight * this.gl.canvas.height * scale;
-    const size = font.textHeight * Math.min(this.gl.canvas.height, this.gl.canvas.width) * scale
-    this.gl.enable(this.gl.BLEND)
-    this.gl.uniform2f(UIKRenderer.mtsdfFontShader.uniforms.canvasWidthHeight, this.gl.canvas.width, this.gl.canvas.height)
-    
-    this.gl.uniform4fv(UIKRenderer.mtsdfFontShader.uniforms.fontColor, color as Float32List)
-    let screenPxRange = (size / font.fontMets!.size) * font.fontMets!.distanceRange
-    screenPxRange = Math.max(screenPxRange, 1.0) // screenPxRange() must never be lower than 1
-    this.gl.uniform1f(UIKRenderer.mtsdfFontShader.uniforms.screenPxRange, screenPxRange)
-    this.gl.uniform1i(UIKRenderer.mtsdfFontShader.uniforms.isOutline, (true) ? 1 : 0)
-    const bytes = new TextEncoder().encode(str)
-    this.gl.bindVertexArray(UIKRenderer.genericVAO)
-    // for (let i = 0; i < str.length; i++) {
-    for(const char of Array.from(str)) {
-      xy[0] += this.drawChar(font, xy, size, char)
-    }
-    this.gl.bindVertexArray(null)
-  }
-  
-  
-  /**
+ /**
  * Draws a rounded rectangle with an optional gradient background.
  * @param bounds - The bounding box of the rounded rectangle (left, top, width, height).
  * @param fillColor - The fill color or top color of the rectangle.
