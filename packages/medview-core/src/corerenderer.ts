@@ -8,6 +8,10 @@ import { VolumeRendererComponent } from './components/volume-renderer-component'
 const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
 const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
 
+const fontMTSDFImage = '/fonts/FiraSans-Regular.png'
+const fontMTSDFMetrics = '/fonts/FiraSans-Regular.json'
+
+
 export class CoreRenderer {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
@@ -16,6 +20,7 @@ export class CoreRenderer {
   private renderer: UIKRenderer
   private defaultFont: UIKFont | null = null
   private hebrewFont: UIKFont | null = null
+  private mtsdfFont: UIKFont | null = null
   private colorTables: ColorTables = new ColorTables()
   private colorMap: string = "viridis"; // viridis
   private paperClip: UIKSVG | null = null
@@ -156,18 +161,33 @@ export class CoreRenderer {
 
     this.renderer.drawTextBox({font: this.defaultFont, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
 
-    this.renderer.drawRotatedText({
-      font: this.defaultFont!,
-      xy: [100, 400], // Starting position of the text
-      str: 'Hello, MedView!', // The string to render
-      scale: 0.50, // Scale factor
-      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
-      outlineColor: [0, 0, 0, 1], // Outline color (black)
-      outlineThickness: 2 // Outline thickness
-    })
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [100, 400], // Starting position of the text
+    //   str: 'Hello, MedView!', // The string to render
+    //   scale: 0.50, // Scale factor
+    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+    //   rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
+    //   outlineThickness: 2 // Outline thickness
+    // })
+   // this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str: 'Hello, MTSDF', scale: 0.5, color: [0.3, 0.75, 0.75, 1.0]})
 }
   
+  async loadAssets() {
+    this.defaultFont = new UIKFont(this.gl)
+    await this.defaultFont.loadDefaultFont()
+    this.hebrewFont = new UIKFont(this.gl)
+    await this.hebrewFont.loadFont(fontImage, fontMetrics)
+    this.mtsdfFont = new UIKFont(this.gl)
+    await this.mtsdfFont.loadFont(fontMTSDFImage, fontMTSDFMetrics)
+    await this.colorTables.loadColormaps()
+    this.paperClip = new UIKSVG(this.gl)
+    await this.paperClip.loadSVG('/svg/paper-clip.svg')
+    this.bitmap = new UIKBitmap(this.gl)
+    await this.bitmap.loadBitmap('/images/rorden.png')
+  }
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.gl = canvas.getContext('webgl2') as WebGL2RenderingContext
@@ -193,14 +213,65 @@ export class CoreRenderer {
       
     // })
     // this.init().then(() => this.draw())
-    this.initUIKit()
+    this.loadAssets().then(() => this.drawText())
+    
+  }
+
+  drawText() {
+    this.clear([0.5, 0.5, 0.5, 1.0])
+
+    const str = 'M' //'Hello, MTSDF'
+    let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
+    //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
+    //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
+    // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
+    color = [0, 0, 0, 1]     
+    this.renderer.drawRotatedText({
+      font: this.mtsdfFont!,
+      xy: [100, 400], // Starting position of the text
+      str: 'Hello, MTSDF', // The string to render
+      scale: 0.50, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      isOutline: true // Outline thickness
+    })
+
+    color = [0.0, 0.478, 1.0, 0.4]
+    this.renderer.drawRotatedText({
+      font: this.mtsdfFont!,
+      xy: [400, 400], // Starting position of the text
+      str: 'Hello, MTSDF', // The string to render
+      scale: 1.50, // Scale factor
+      color, //[0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+      // outlineColor: null, //[0, 0, 0, 1], // Outline color (black)
+      isOutline: true // Outline thickness
+    })
+
+    color = [1, 1, 1, 1] // [0.0, 0.478, 1.0, 1.0]
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [150, 200],
+      str: 'This is a long string that will wrap if it exceeds the max width.',
+      scale: 1.0,
+      color,
+      // outlineColor: [0.25, 0.25, 1, 1],
+      rotation: -Math.PI / 6, // 30-degree rotation
+      maxWidth: 300, // Wrap to fit within 300px
+      isOutline: true
+    })
+
   }
 
   async init() {
+    // fonts
     this.defaultFont = new UIKFont(this.gl)
     await this.defaultFont.loadDefaultFont()
     this.hebrewFont = new UIKFont(this.gl)
     await this.hebrewFont.loadFont(fontImage, fontMetrics)
+    this.mtsdfFont = new UIKFont(this.gl)
+    await this.mtsdfFont.loadFont(fontMTSDFImage, fontMTSDFMetrics)
+
     await this.colorTables.loadColormaps()
     this.paperClip = new UIKSVG(this.gl)
     await this.paperClip.loadSVG('/svg/paper-clip.svg')

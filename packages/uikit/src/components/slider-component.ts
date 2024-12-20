@@ -191,7 +191,7 @@ export class SliderComponent extends BaseUIComponent {
       scale,
       color: valueTextColor,
       outlineColor: [0, 0, 0, 1.0],
-      outlineThickness: 2
+      isOutline: true
     })
   }
   
