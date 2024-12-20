@@ -72,6 +72,64 @@ export class CoreRenderer {
     // this.uikit.addComponent(volumeRenderer)
 
     // Create a PanelContainerComponent with Apple-themed gradient
+   
+    const colorbar = new ColorbarComponent({
+      gl,
+      minMax: [0, 100],
+      colormapName: 'viridis',
+      bounds: [620, 10, 400, 50],
+      font: this.defaultFont!,
+      tickSpacing: 5,
+      tickLength: 15,
+      tickColor: [0, 0, 0, 1], // Black
+      labelColor: [0, 0, 0, 1], // Black
+      alignmentPoint: AlignmentPoint.BOTTOMCENTER      
+    })
+    await colorbar.init()
+
+    // Add ColorbarComponent to UIKit
+    this.uikit.addComponent(colorbar)
+
+    const button = new ButtonComponent({
+      font: this.defaultFont!, // Use the default font loaded in CoreRenderer
+      position: [300, 400], // Position the button at (300, 400)
+      text: 'Click Me', // Button text
+      textColor: [1.0, 1.0, 1.0, 1.0], // White text
+      backgroundColor: [0.0, 0.5, 1.0, 1.0], // Blue button background
+      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
+      // outlineThickness: 2, // Outline thickness
+      highlightColor: [0.7, 0.7, 0.7, 1.0], // Light gray highlight color on hover
+      buttonDownColor: [0.0, 0.4, 0.8, 1.0], // Darker blue on button down
+      onClick: (event: PointerEvent) => {
+        console.log('Button clicked!', event)
+        alert('Button clicked!')
+      },
+      scale: 0.7, // Default scale
+      // margin: 20, // Padding inside the button
+      // roundness: 0.5 // Rounded corners (50% roundness)
+    })
+
+    this.uikit.addComponent(button)
+
+    // Render the UI
+    this.uikit.draw()
+
+    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [100, 400], // Starting position of the text
+    //   str: 'Hello, MedView!', // The string to render
+    //   scale: 0.50, // Scale factor
+    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+    //   rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
+    //   outlineThickness: 2 // Outline thickness
+    // })
+   // this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str: 'Hello, MTSDF', scale: 0.5, color: [0.3, 0.75, 0.75, 1.0]})
+}
+  async initalizeComponents() {
+    const gl = this.gl
     const panelContainer = new PanelContainerComponent({
       canvas: this.canvas,
       position: [0, 0],
@@ -112,67 +170,13 @@ export class CoreRenderer {
     panelContainer.addComponent(text2)
 
     // Add the panel to UIKit
-    this.uikit.addComponent(panelContainer)
+    this.uikit!.addComponent(panelContainer)
 
     
 
     // Add ColorbarComponent
     await ColorbarComponent.loadColorTables()
-    const colorbar = new ColorbarComponent({
-      gl,
-      minMax: [0, 100],
-      colormapName: 'viridis',
-      bounds: [620, 10, 400, 50],
-      font: this.defaultFont,
-      tickSpacing: 5,
-      tickLength: 15,
-      tickColor: [0, 0, 0, 1], // Black
-      labelColor: [0, 0, 0, 1], // Black
-      alignmentPoint: AlignmentPoint.BOTTOMCENTER      
-    })
-    await colorbar.init()
-
-    // Add ColorbarComponent to UIKit
-    this.uikit.addComponent(colorbar)
-
-    const button = new ButtonComponent({
-      font: this.defaultFont!, // Use the default font loaded in CoreRenderer
-      position: [300, 400], // Position the button at (300, 400)
-      text: 'Click Me', // Button text
-      textColor: [1.0, 1.0, 1.0, 1.0], // White text
-      backgroundColor: [0.0, 0.5, 1.0, 1.0], // Blue button background
-      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
-      // outlineThickness: 2, // Outline thickness
-      highlightColor: [0.7, 0.7, 0.7, 1.0], // Light gray highlight color on hover
-      buttonDownColor: [0.0, 0.4, 0.8, 1.0], // Darker blue on button down
-      onClick: (event: PointerEvent) => {
-        console.log('Button clicked!', event)
-        alert('Button clicked!')
-      },
-      scale: 0.7, // Default scale
-      // margin: 20, // Padding inside the button
-      // roundness: 0.5 // Rounded corners (50% roundness)
-    })
-
-    this.uikit.addComponent(button)
-
-    // Render the UI
-    this.uikit.draw()
-
-    this.renderer.drawTextBox({font: this.defaultFont, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
-
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont!,
-    //   xy: [100, 400], // Starting position of the text
-    //   str: 'Hello, MedView!', // The string to render
-    //   scale: 0.50, // Scale factor
-    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-    //   rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
-    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
-    //   outlineThickness: 2 // Outline thickness
-    // })
-   // this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str: 'Hello, MTSDF', scale: 0.5, color: [0.3, 0.75, 0.75, 1.0]})
-}
+  }
   
   async loadAssets() {
     this.defaultFont = new UIKFont(this.gl)
@@ -186,6 +190,7 @@ export class CoreRenderer {
     await this.paperClip.loadSVG('/svg/paper-clip.svg')
     this.bitmap = new UIKBitmap(this.gl)
     await this.bitmap.loadBitmap('/images/rorden.png')
+  //  await this.initalizeComponents() 
   }
 
   constructor(canvas: HTMLCanvasElement) {
@@ -199,6 +204,8 @@ export class CoreRenderer {
     this.cuboidShader = new UIKShader(this.gl, cuboidVertexShaderSource, cuboidFragmentShaderSource)
     // Initialize the UIKRenderer
     this.renderer = new UIKRenderer(this.gl)
+    // Instantiate UIKit
+    this.uikit = new UIKit(this.gl)
     this.niftiLoader = new NiftiMeshLoader(this.gl)
 
     // Load the default font
@@ -219,7 +226,7 @@ export class CoreRenderer {
 
   drawText() {
     this.clear([0.5, 0.5, 0.5, 1.0])
-
+    
     const str = 'M' //'Hello, MTSDF'
     let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
     //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
@@ -261,6 +268,8 @@ export class CoreRenderer {
       isOutline: true,
       alignment: HorizontalAlignment.LEFT
     })
+
+    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
 
   }
 
