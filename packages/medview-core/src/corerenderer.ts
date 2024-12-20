@@ -544,10 +544,6 @@ async draw(): Promise<void> {
   //   style: LineStyle.SOLID,
   //   terminator: LineTerminator.ARROW
   // })
-      // Increment rotation angle
-      this.rotationAngle += 0.01     
-      // Schedule the next frame
-      // requestAnimationFrame(() => this.draw())
   }
   
 

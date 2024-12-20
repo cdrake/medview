@@ -26,7 +26,6 @@ import { RulerComponent } from './components/ruler-component.js'
 import { SliderComponent } from './components/slider-component.js'
 import { tickSpacing } from './utilities/graph-utilities'
 
-
 export class UIKRenderer {
   private _gl: WebGL2RenderingContext
   protected static lineShader: UIKShader
@@ -486,19 +485,25 @@ public drawCircle({
     gl.bindVertexArray(null) // Unbind to avoid side effects
   }
 
-  /**
-   * Draws rotated text, supporting individual character rendering and RTL.
-   * @param params - Object containing parameters for rendering rotated text.
-   * @param params.font - The font object for rendering text.
-   * @param params.xy - The starting position of the text.
-   * @param params.str - The string to render.
-   * @param params.scale - The scale of the text. Defaults to 1.0.
-   * @param params.color - The color of the text. Defaults to red.
-   * @param params.rotation - The rotation angle in radians. Defaults to 0.
-   * @param params.outlineColor - The outline color of the text. Defaults to black.
-   * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
-   */
-  /**
+  
+  calculateOuterColor(fontColor: Color): Color {
+    // Extract RGB components
+    const r = fontColor[0]
+    const g = fontColor[1]
+    const b = fontColor[2]
+  
+    // Calculate the magnitude of the RGB vector
+    const rgbLength = Math.sqrt(r ** 2 + g ** 2 + b ** 2)
+  
+    // Apply the step function logic
+    const outerColorValue = 1.0 - (rgbLength >= 0.1 ? 1.0 : 0.0)
+  
+    // Return the resulting color as a Color type
+    return [outerColorValue, outerColorValue, outerColorValue, fontColor[3]]
+  }
+  
+
+/**
  * Draws rotated text, supporting individual character rendering and high-DPI scaling.
  * @param params - Object containing parameters for rendering rotated text.
  * @param params.font - The font object for rendering text.
@@ -508,7 +513,7 @@ public drawCircle({
  * @param params.color - The color of the text. Defaults to red.
  * @param params.rotation - The rotation angle in radians. Defaults to 0.
  * @param params.outlineColor - The outline color of the text. Defaults to black.
- * @param params.outlineThickness - The thickness of the text outline. Defaults to 2.
+ * @param params.isOutline - Draw an outline around the letters.ß
  * @param params.maxWidth - Maximum width for text wrapping.
  */
   public drawRotatedText({
@@ -518,9 +523,10 @@ public drawCircle({
     scale = 1.0,
     color = [1.0, 0.0, 0.0, 1.0],
     rotation = 0.0,
-    outlineColor = [0, 0, 0, 1.0],
-    outlineThickness = 2,
-    maxWidth = 0 // Default to 0, meaning no wrapping
+    outlineColor = null,
+    isOutline = false,
+    maxWidth = 0, // Default to 0, meaning no wrapping
+    alignment = HorizontalAlignment.LEFT
   }: {
     font: UIKFont
     xy: Vec2
@@ -528,13 +534,13 @@ public drawCircle({
     scale?: number
     color?: Color
     rotation?: number
-    outlineColor?: Color
-    outlineThickness?: number
+    outlineColor?: Color | null
+    isOutline?: boolean
     maxWidth?: number
+    alignment?: HorizontalAlignment
   }): void {
     if (!font.isFontLoaded) {
-      console.error('font not loaded')
-      return
+      throw new Error('font not loaded')
     }
   
     if (!UIKRenderer.rotatedFontShader) {
@@ -543,6 +549,10 @@ public drawCircle({
 
     const rotatedFontShader = UIKRenderer.rotatedFontShader
     const gl = this._gl
+
+    if(!outlineColor) {
+      outlineColor = this.calculateOuterColor(color)
+    }
   
     // Bind the font texture
     gl.activeTexture(gl.TEXTURE0)
@@ -562,14 +572,17 @@ public drawCircle({
     gl.uniform4fv(rotatedFontShader.uniforms.outlineColor, outlineColor as Float32List)
   
     // Calculate screen pixel range
-    let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
+    // let screenPxRange = (scale / font.fontMets!.size) * font.fontMets!.distanceRange
+    const size = font.textHeight * gl.canvas.height * scale
+    let screenPxRange = (size / font.fontMets!.size) * font.fontMets!.distanceRange
+    screenPxRange = Math.max(screenPxRange, 1.0) 
     // screenPxRange *= window.devicePixelRatio || 1.0 // Adjust for DPR
     gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
   
     // Convert outline thickness to NDC, considering DPR
-    const ndcOutlineThickness = outlineThickness / (gl.canvas.width * (window.devicePixelRatio || 1.0))
-    gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, ndcOutlineThickness)
-  
+    // const ndcOutlineThickness = outlineThickness / (gl.canvas.width * (window.devicePixelRatio || 1.0))
+    // gl.uniform1f(rotatedFontShader.uniforms.outlineThickness, ndcOutlineThickness)
+    gl.uniform1i(rotatedFontShader.uniforms.isOutline, isOutline ? 1 : 0)
     // Pass canvas dimensions for proper scaling
     gl.uniform2fv(rotatedFontShader.uniforms.canvasWidthHeight, [
       gl.canvas.width * (window.devicePixelRatio || 1.0),
@@ -584,7 +597,7 @@ public drawCircle({
     mat4.ortho(orthoMatrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
   
     // Split text into lines based on maxWidth
-    const size = font.textHeight * gl.canvas.height * scale
+    
     const words = str.split(' ')
     const lines: string[] = []
   
@@ -608,8 +621,8 @@ public drawCircle({
     }
   
     // Adjust line height to include outline thickness
-    outlineThickness = 0;
-    const lineHeight = font.getTextHeight(str, scale) + outlineThickness * scale
+    // outlineThickness = 0;
+    const lineHeight = font.getTextHeight(str, scale)// + outlineThickness * scale
   
     // Calculate perpendicular offset for each line
     const perpendicularX = -Math.sin(rotation) * lineHeight
@@ -622,47 +635,78 @@ public drawCircle({
 
     // console.log('dpr', dpr)
     lines.forEach((line) => {
-      // Apply rotation to the whole line's starting position
+      // Calculate the line's total width
+      const lineWidth = font.getTextWidth(line, scale)
+    
+      // Determine alignment offset considering rotation
+      let alignmentOffsetX = 0
+      let alignmentOffsetY = 0
+      switch (alignment) {
+        case HorizontalAlignment.CENTER:
+          alignmentOffsetX = -Math.cos(rotation) * lineWidth / 2
+          alignmentOffsetY = -Math.sin(rotation) * lineWidth / 2
+          break
+        case HorizontalAlignment.RIGHT:
+          alignmentOffsetX = -Math.cos(rotation) * lineWidth
+          alignmentOffsetY = -Math.sin(rotation) * lineWidth
+          break
+        case HorizontalAlignment.LEFT:
+        default:
+          alignmentOffsetX = 0
+          alignmentOffsetY = 0
+          break
+      }
+    
+      // Apply rotation and adjusted alignment offset to the line's starting position
       const modelMatrix = mat4.create()
-      mat4.translate(modelMatrix, modelMatrix, [baselineX, baselineY, 0.0])
+      mat4.translate(modelMatrix, modelMatrix, [baselineX + alignmentOffsetX, baselineY + alignmentOffsetY, 0.0])
       mat4.rotateZ(modelMatrix, modelMatrix, rotation)
-  
+    
       let currentX = 0 // Start X position relative to the line
-      
+    
       for (const char of Array.from(line)) {
         const metrics = font.fontMets!.mets[char]
         if (!metrics) {
           continue
         }
-        // console.log('rotation offsets', Math.sin(rotation) * metrics.lbwh[1] * size,-Math.cos(rotation) * metrics.lbwh[1] * size )
-        const horizontalOffset = Math.sin(rotation) * metrics.lbwh[1] * size
-        const verticalOffset =  -Math.cos(rotation) * metrics.lbwh[1] * size + size
-
+    
+        // Calculate character-specific offsets
+        const charWidth = metrics.lbwh[2] * size
+        const charHeight = metrics.lbwh[3] * size
+        const charOffsetX = metrics.lbwh[0] * size
+        const charOffsetY = metrics.lbwh[1] * size
+    
+        // Calculate rotated positions for each character
+        const rotatedCharX = currentX + charOffsetX
+        const rotatedCharY = charOffsetY
+    
         const charModelMatrix = mat4.clone(modelMatrix)
         mat4.translate(charModelMatrix, charModelMatrix, [
-          currentX + horizontalOffset,
-          verticalOffset,
+          rotatedCharX,
+          -rotatedCharY,
           0.0
         ])
-        mat4.scale(charModelMatrix, charModelMatrix, [metrics.lbwh[2] * size, -metrics.lbwh[3] * size, 1.0])
-  
+        mat4.scale(charModelMatrix, charModelMatrix, [charWidth, -charHeight, 1.0])
+    
         // Combine the orthographic matrix with the character's model matrix
         const mvpMatrix = mat4.create()
         mat4.multiply(mvpMatrix, orthoMatrix, charModelMatrix)
-  
+    
         // Set uniform values for MVP matrix and UV coordinates
         gl.uniformMatrix4fv(rotatedFontShader.uniforms.modelViewProjectionMatrix, false, mvpMatrix)
         gl.uniform4fv(rotatedFontShader.uniforms.uvLeftTopWidthHeight, metrics.uv_lbwh)
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-  
-        // Update position for the next character (check for right to left languages and if char is a diacritic)
-        currentX += metrics.xadv * size + (font.isDiacritic(char) ? 0 : ((metrics.xadv > 0) ? outlineThickness : -outlineThickness))
+    
+        // Advance the current X position
+        currentX += metrics.xadv * size
       }
-  
+    
       // Move the baseline for the next line along the perpendicular axis
       baselineX += perpendicularX
       baselineY += perpendicularY
     })
+    
+    
   
     // Unbind the VAO
     gl.bindVertexArray(null)
@@ -687,6 +731,7 @@ public drawCircle({
     scale = 1.0,
     color = [0, 0, 0, 1],
     outlineColor = [0, 0, 0, 0],
+    isOutline = false,
     maxWidth = 0
   }: {
     font: UIKFont
@@ -695,6 +740,7 @@ public drawCircle({
     scale?: number
     color?: Color
     outlineColor?: Color
+    isOutline?: boolean
     maxWidth?: number
   }): void {
     // Use the existing drawRotatedText method with default rotation and outline parameters    
@@ -706,14 +752,12 @@ public drawCircle({
       color,
       rotation: 0, // No rotation
       outlineColor,
-      outlineThickness: 0, // No outline thickness
+      isOutline, // No outline thickness
       maxWidth
     })
   }
 
-  
-  
-  /**
+ /**
  * Draws a rounded rectangle with an optional gradient background.
  * @param bounds - The bounding box of the rounded rectangle (left, top, width, height).
  * @param fillColor - The fill color or top color of the rectangle.
@@ -1227,79 +1271,5 @@ public drawSlider({
     scale
   })
 }
-
-
-  /**
-     * Draw an oriented box using the box shader.
-     */
-//   public drawBox({
-//     boxStart,
-//     boxEnd,
-//     boxThickness,
-//     fillColor = [0.0, 0.0, 1.0, 1.0], // Default to blue with full opacity
-//     outlineColor = [1.0, 1.0, 1.0, 1.0], // Default to white with full opacity
-//     outlineThickness = 1.0 // Default outline thickness in pixels
-// }: {
-//     boxStart: Vec2 // Start point of the box in pixels
-//     boxEnd: Vec2 // End point of the box in pixels
-//     boxThickness: number // Thickness of the box in pixels
-//     fillColor?: Vec4 // Fill color
-//     outlineColor?: Vec4 // Outline color
-//     outlineThickness?: number // Outline thickness in pixels
-// }): void {
-//     const gl = this.gl
-//     const shader = UIKRenderer.boxShader
-//     shader.use(gl)
-
-//     // Get the Device Pixel Ratio (DPR)
-//     const dpr = window.devicePixelRatio || 1
-
-//     // Get canvas bounding rectangle
-//     const rect = (gl.canvas as HTMLCanvasElement).getBoundingClientRect()
-
-//     // Incorporate scroll offsets
-//     const scrollX = window.scrollX || 0
-//     const scrollY = window.scrollY || 0
-
-//     // Scale inputs by DPR
-//     const scaledBoxStart = boxStart //.map(value => value * dpr) as Vec2
-//     const scaledBoxEnd = boxEnd //.map(value => value * dpr) as Vec2
-//     const scaledBoxThickness = boxThickness * dpr
-//     const scaledOutlineThickness = outlineThickness * dpr
-
-//     // Normalize boxStart and boxEnd to NDC
-//     const canvasWidth = rect.width * dpr
-//     const canvasHeight = rect.height * dpr
-//     const canvasLeft = (rect.left + scrollX) * dpr
-//     const canvasTop = (rect.top + scrollY) * dpr
-
-//     const boxStartNDC: Vec2 = [
-//         ((scaledBoxStart[0] - canvasLeft) / canvasWidth) * 2.0 - 1.0,
-//         -(((scaledBoxStart[1] - canvasTop) / canvasHeight) * 2.0 - 1.0) // Y inverted
-//     ]
-//     const boxEndNDC: Vec2 = [
-//         ((scaledBoxEnd[0] - canvasLeft) / canvasWidth) * 2.0 - 1.0,
-//         -(((scaledBoxEnd[1] - canvasTop) / canvasHeight) * 2.0 - 1.0) // Y inverted
-//     ]
-
-//     // Convert boxThickness and outlineThickness to NDC
-//     const boxThicknessNDC = (scaledBoxThickness / canvasHeight) * 2.0
-//     const outlineThicknessNDC = (scaledOutlineThickness / canvasHeight) * 2.0
-
-//     // Pass uniforms to the shader
-//     gl.uniform2f(shader.uniforms.iResolution, canvasWidth, canvasHeight) // Pass scaled resolution
-//     gl.uniform2f(shader.uniforms.boxStart, ...boxStartNDC)
-//     gl.uniform2f(shader.uniforms.boxEnd, ...boxEndNDC)
-//     gl.uniform1f(shader.uniforms.boxThickness, boxThicknessNDC) // Use NDC thickness
-//     gl.uniform1f(shader.uniforms.outlineThickness, outlineThicknessNDC) // Use NDC outline thickness
-//     gl.uniform4fv(shader.uniforms.fillColor, fillColor) // Fill color
-//     gl.uniform4fv(shader.uniforms.outlineColor, outlineColor) // Outline color
-
-//     // Bind and draw the full-screen VAO
-//     gl.bindVertexArray(UIKRenderer.fullScreenVAO)
-//     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-//     gl.bindVertexArray(null)
-// }
-
 
 }
