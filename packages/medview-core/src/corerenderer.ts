@@ -346,6 +346,20 @@ export class CoreRenderer {
       isOutline: true, // Outline thickness
     })
 
+    color = [1, 0, 1, 1]
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [canvasHorizontalMidpoint, canvasVerticalMidpoint],
+      str: 'This is a long string that will wrap if it exceeds the max width.',
+      scale: scale * 0.75,
+      color,
+      // outlineColor: [0.25, 0.25, 1, 1],
+      // rotation: -Math.PI / 2, // 30-degree rotation
+      maxWidth: 300, // Wrap to fit within 300px
+      isOutline: true,
+      alignment: HorizontalAlignment.CENTER
+    })
+
     str = 'Hello, Left of Text j'
     let textHeight = this.defaultFont!.getTextHeight(str, scale)
     let y = canvasVerticalMidpoint - textHeight 
