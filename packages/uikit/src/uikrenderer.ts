@@ -731,6 +731,12 @@ public drawTextOffset({
       adjustedX = xy[0] + strWidth
       alignment = HorizontalAlignment.RIGHT
       break
+    case OffsetDirection.CenteredOn: {
+      const size = font.textHeight * this.gl.canvas.height * scale  
+      adjustedY = xy[1] + size * (font.fontMets!.ascender + font.fontMets!.descender) / 2
+      break
+    }
+
   }
 
   this.drawRotatedText({
@@ -844,6 +850,29 @@ public drawTextRightOf({
   this.drawTextOffset({ font, xy, str, scale, color, rotation, outlineColor, isOutline, maxWidth, direction: OffsetDirection.RightOf })
 }
 
+public drawTextCenteredOn({
+  font,
+  xy,
+  str,
+  scale = 1.0,
+  color = [1.0, 0.0, 0.0, 1.0],
+  rotation = 0.0,
+  outlineColor = null,
+  isOutline = false,
+  maxWidth = 0,
+}: {
+  font: UIKFont
+  xy: Vec2
+  str: string
+  scale?: number
+  color?: Color
+  rotation?: number
+  outlineColor?: Color | null
+  isOutline?: boolean
+  maxWidth?: number
+}): void {  
+  this.drawTextOffset({ font, xy, str, scale, color, rotation, outlineColor, isOutline, maxWidth, direction: OffsetDirection.CenteredOn })
+}
 
   /**
    * Draws non-rotated text using the existing drawRotatedText method.
@@ -1084,10 +1113,10 @@ public drawTextBox({
   // Adjust the position of the text with a margin, ensuring it's vertically centered
   const textPosition = [
     leftTopWidthHeight[0] + leftTopWidthHeight[2] / 2,
-    leftTopWidthHeight[1] + (leftTopWidthHeight[3] + size * (font.fontMets!.ascender + font.fontMets!.descender)) / 2
+    leftTopWidthHeight[1] + leftTopWidthHeight[3] / 2 //+ size * (font.fontMets!.ascender + font.fontMets!.descender)) / 2
   ] as [number, number]
   const vertMid = leftTopWidthHeight[1] + leftTopWidthHeight[3] / 2
-  //this.drawLine({startEnd: [leftTopWidthHeight[0], vertMid, leftTopWidthHeight[0] + leftTopWidthHeight[2], vertMid], color: [1, 1, 1, 1]})
+  this.drawLine({startEnd: [leftTopWidthHeight[0], vertMid, leftTopWidthHeight[0] + leftTopWidthHeight[2], vertMid], color: [1, 1, 1, 1]})
   // Render the text
   // this.drawText({
   //   font,
@@ -1098,16 +1127,26 @@ public drawTextBox({
   //   maxWidth,
   //   outlineColor: fontOutlineColor,
   // })
-  this.drawRotatedText({
-    font,
-    xy: textPosition,
-    str: text,
-    scale,
-    color: textColor,
-    maxWidth,
-    outlineColor: fontOutlineColor,
-    alignment: HorizontalAlignment.CENTER
-  })
+  // this.drawRotatedText({
+  //   font,
+  //   xy: textPosition,
+  //   str: text,
+  //   scale,
+  //   color: textColor,
+  //   maxWidth,
+  //   outlineColor: fontOutlineColor,
+  //   alignment: HorizontalAlignment.CENTER
+  // })
+  this.drawTextCenteredOn({
+      font,
+      xy: textPosition,
+      str: text,
+      scale,
+      color: textColor,
+      maxWidth,
+      outlineColor: fontOutlineColor,
+      isOutline: fontOutlineColor ? true : false
+    })
 }
   
   /**

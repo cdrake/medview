@@ -130,4 +130,5 @@ export enum OffsetDirection {
   Above,
   LeftOf,
   RightOf,
+  CenteredOn
 }

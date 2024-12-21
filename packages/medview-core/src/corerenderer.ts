@@ -414,7 +414,7 @@ export class CoreRenderer {
   }
 
   drawComponents() {
-    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1], roundness: 1.0})
+    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [0, 0, 0, 1], outlineColor: [1, 1, 1, 1], fontOutlineColor: [1, 1, 1, 1], roundness: 1.0, fillColor: [0, 0.5, 0.7, 1]})
   }
 
   async init() {
