@@ -220,7 +220,7 @@ export class CoreRenderer {
       
     // })
     // this.init().then(() => this.draw())
-    this.loadAssets().then(() => this.drawText())
+    this.loadAssets().then(() => this.draw())
     
   }
 
@@ -394,11 +394,11 @@ export class CoreRenderer {
     
   }
 
-  drawText() {
+  draw() {
     this.clear([0.75, 0.75, 0.75, 1.0])
     // this.drawWordWrappedText()
     // this.drawDifferentSizedText()
-    this.drawOffsetText()
+    // this.drawOffsetText()
     // const str = 'M' //'Hello, MTSDF'
     // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
     //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
@@ -410,7 +410,11 @@ export class CoreRenderer {
     
     
     // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+    this.drawComponents()
+  }
 
+  drawComponents() {
+    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1], roundness: 1.0})
   }
 
   async init() {
@@ -640,136 +644,136 @@ export class CoreRenderer {
   
   
   
-  /**
- * Main draw method that demonstrates rendering shapes, rotated text, and a ruler.
- */
-async draw(): Promise<void> {
-    if (!this.defaultFont!.isFontLoaded) {
-      return
-    }
+//   /**
+//  * Main draw method that demonstrates rendering shapes, rotated text, and a ruler.
+//  */
+// async draw(): Promise<void> {
+//     if (!this.defaultFont!.isFontLoaded) {
+//       return
+//     }
   
-    // Clear the canvas with a black background
-    this.clear([0.5, 0.5, 0.5, 1])
-    this.renderCuboid()
-    // Draw a triangle
-    // this.renderer.drawTriangle({
-    //   headPoint: [100, 600],
-    //   baseMidPoint: [100, 800],
-    //   baseLength: 200,
-    //   color: [1, 0, 0, 1] // Red triangle
-    // })
+//     // Clear the canvas with a black background
+//     this.clear([0.5, 0.5, 0.5, 1])
+//     this.renderCuboid()
+//     // Draw a triangle
+//     // this.renderer.drawTriangle({
+//     //   headPoint: [100, 600],
+//     //   baseMidPoint: [100, 800],
+//     //   baseLength: 200,
+//     //   color: [1, 0, 0, 1] // Red triangle
+//     // })
   
-    // // Draw a circle
-    // this.renderer.drawCircle({
-    //   leftTopWidthHeight: [250, 700, 150, 150],
-    //   circleColor: [0, 0, 1, 1], // Blue circle
-    //   fillPercent: 1.0
-    // })
+//     // // Draw a circle
+//     // this.renderer.drawCircle({
+//     //   leftTopWidthHeight: [250, 700, 150, 150],
+//     //   circleColor: [0, 0, 1, 1], // Blue circle
+//     //   fillPercent: 1.0
+//     // })
   
-    // // Draw a line
-    // this.renderer.drawLine({
-    //   startEnd: [200, 800, 600, 610],
-    //   thickness: 5,
-    //   color: [0, 1, 0, 1], // Green line
-    //   style: LineStyle.SOLID,
-    //   terminator: LineTerminator.ARROW
-    // })
+//     // // Draw a line
+//     // this.renderer.drawLine({
+//     //   startEnd: [200, 800, 600, 610],
+//     //   thickness: 5,
+//     //   color: [0, 1, 0, 1], // Green line
+//     //   style: LineStyle.SOLID,
+//     //   terminator: LineTerminator.ARROW
+//     // })
   
-    // // Draw another triangle
-    // this.renderer.drawTriangle({
-    //   headPoint: [500, 600],
-    //   baseMidPoint: [500, 800],
-    //   baseLength: 200,
-    //   color: [1, 1, 0, 1] // Yellow triangle
-    // })
+//     // // Draw another triangle
+//     // this.renderer.drawTriangle({
+//     //   headPoint: [500, 600],
+//     //   baseMidPoint: [500, 800],
+//     //   baseLength: 200,
+//     //   color: [1, 1, 0, 1] // Yellow triangle
+//     // })
   
-    // // // Draw rotated text
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont!,
-    //   xy: [100, 300], // Starting position of the text
-    //   str: 'Hello, MedView!', // The string to render
-    //   scale: 0.50, // Scale factor
-    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-    //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
-    //   outlineThickness: 2 // Outline thickness
-    // })
+//     // // // Draw rotated text
+//     // this.renderer.drawRotatedText({
+//     //   font: this.defaultFont!,
+//     //   xy: [100, 300], // Starting position of the text
+//     //   str: 'Hello, MedView!', // The string to render
+//     //   scale: 0.50, // Scale factor
+//     //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+//     //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+//     //   outlineColor: [0, 0, 0, 1], // Outline color (black)
+//     //   outlineThickness: 2 // Outline thickness
+//     // })
   
-    // // Draw a ruler
-    // this.renderer.drawRuler({
-    //   pointA: [300, 500], // Starting point of the ruler
-    //   pointB: [600, 500], // Ending point of the ruler
-    //   length: 30.5, // Length value to display
-    //   units: 'cm', // Units to display
-    //   font: this.defaultFont!, // Font for text
-    //   textColor: [1, 0, 0, 1], // Red text
-    //   lineColor: [0, 0, 0, 1], // Black ruler lines
-    //   lineThickness: 2, // Thickness of the lines
-    //   offset: 50, // Offset distance for parallel line and text
-    //   scale: 1.0, // Scale factor for text
-    //   showTickmarkNumbers: true // Show tickmark numbers
-    // })
+//     // // Draw a ruler
+//     // this.renderer.drawRuler({
+//     //   pointA: [300, 500], // Starting point of the ruler
+//     //   pointB: [600, 500], // Ending point of the ruler
+//     //   length: 30.5, // Length value to display
+//     //   units: 'cm', // Units to display
+//     //   font: this.defaultFont!, // Font for text
+//     //   textColor: [1, 0, 0, 1], // Red text
+//     //   lineColor: [0, 0, 0, 1], // Black ruler lines
+//     //   lineThickness: 2, // Thickness of the lines
+//     //   offset: 50, // Offset distance for parallel line and text
+//     //   scale: 1.0, // Scale factor for text
+//     //   showTickmarkNumbers: true // Show tickmark numbers
+//     // })
 
-    // this.renderer.drawRotatedText({
-    //   font: this.defaultFont!,
-    //   xy: [500, 200],
-    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
-    //   scale: 0.5,
-    //   color: [1, 1, 1, 1],
-    //   outlineColor: [0.25, 0.25, 1, 1],
-    //   rotation: Math.PI / 6, // 30-degree rotation
-    //   maxWidth: 300 // Wrap to fit within 300px
-    // })
+//     // this.renderer.drawRotatedText({
+//     //   font: this.defaultFont!,
+//     //   xy: [500, 200],
+//     //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+//     //   scale: 0.5,
+//     //   color: [1, 1, 1, 1],
+//     //   outlineColor: [0.25, 0.25, 1, 1],
+//     //   rotation: Math.PI / 6, // 30-degree rotation
+//     //   maxWidth: 300 // Wrap to fit within 300px
+//     // })
 
-    // // if(this.hebrewFont) {
-    // // this.renderer.drawRotatedText({
-    // //   font: this.hebrewFont,
-    // //   xy: [800, 500],
-    // //   str: 'שָׁלוֹם עֲלֵיכֶם',
-    // //   scale: 0.5,
-    // //   color: [1, 1, 1, 1],
-    // //   outlineColor: [0.25, 0.25, 1, 1],
-    // //   rotation: 0,//Math.PI / 6, // 30-degree rotation
-    // //   maxWidth: 300 // Wrap to fit within 300px
-    // // })
-    // // }
-    // // const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
-    // // this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
+//     // // if(this.hebrewFont) {
+//     // // this.renderer.drawRotatedText({
+//     // //   font: this.hebrewFont,
+//     // //   xy: [800, 500],
+//     // //   str: 'שָׁלוֹם עֲלֵיכֶם',
+//     // //   scale: 0.5,
+//     // //   color: [1, 1, 1, 1],
+//     // //   outlineColor: [0.25, 0.25, 1, 1],
+//     // //   rotation: 0,//Math.PI / 6, // 30-degree rotation
+//     // //   maxWidth: 300 // Wrap to fit within 300px
+//     // // })
+//     // // }
+//     // // const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
+//     // // this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
 
-    // this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
-    // this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
-    // this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})    
-    // this.renderer.drawSlider({
-    //   position: [800, 700],
-    //   size: [300, 40], // Slider size
-    //   value: 50, // Current slider value
-    //   min: 0,
-    //   max: 100,
-    //   trackColor: [0.8, 0.8, 0.8, 1.0], // Light gray
-    //   fillColor: [0.0, 0.5, 1.0, 1.0], // Blue
-    //   knobColor: [1.0, 1.0, 1.0, 1.0], // White
-    //   shadowColor: [0.0, 0.0, 0.0, 0.3], // Light black shadow
-    //   shadowOffset: [0.03, -0.03], // Slight shadow offset
-    //   shadowBlur: 0.1, // Smooth shadow blur
-    //   valueTextColor: [0.0, 0.5, 1.0, 1.0], // Blue text
-    //   font: this.defaultFont!, // Default font for rendering the slider value
-    //   scale: 0.5 // Default scale
-    // })
+//     // this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
+//     // this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
+//     // this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})    
+//     // this.renderer.drawSlider({
+//     //   position: [800, 700],
+//     //   size: [300, 40], // Slider size
+//     //   value: 50, // Current slider value
+//     //   min: 0,
+//     //   max: 100,
+//     //   trackColor: [0.8, 0.8, 0.8, 1.0], // Light gray
+//     //   fillColor: [0.0, 0.5, 1.0, 1.0], // Blue
+//     //   knobColor: [1.0, 1.0, 1.0, 1.0], // White
+//     //   shadowColor: [0.0, 0.0, 0.0, 0.3], // Light black shadow
+//     //   shadowOffset: [0.03, -0.03], // Slight shadow offset
+//     //   shadowBlur: 0.1, // Smooth shadow blur
+//     //   valueTextColor: [0.0, 0.5, 1.0, 1.0], // Blue text
+//     //   font: this.defaultFont!, // Default font for rendering the slider value
+//     //   scale: 0.5 // Default scale
+//     // })
     
     
     
-  // this.renderer.drawLine({
-  //   startEnd: [500, 500, 1000, 800],
-  //   thickness: 5,
-  //   color: [0, 1, 0, 1], // Green line
-  //   style: LineStyle.SOLID,
-  //   terminator: LineTerminator.ARROW
-  // })
-      // Increment rotation angle
-      this.rotationAngle += 0.01     
-      // Schedule the next frame
-      // requestAnimationFrame(() => this.draw())
-  }
+//   // this.renderer.drawLine({
+//   //   startEnd: [500, 500, 1000, 800],
+//   //   thickness: 5,
+//   //   color: [0, 1, 0, 1], // Green line
+//   //   style: LineStyle.SOLID,
+//   //   terminator: LineTerminator.ARROW
+//   // })
+//       // Increment rotation angle
+//       this.rotationAngle += 0.01     
+//       // Schedule the next frame
+//       // requestAnimationFrame(() => this.draw())
+//   }
   
 
   /**

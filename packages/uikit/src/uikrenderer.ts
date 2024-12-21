@@ -1079,23 +1079,34 @@ public drawTextBox({
     thickness: 5 // Add thickness parameter to match drawRoundedRect signature
   })
   const descenderDepth = font.getDescenderDepth(text, scale)
-
+  const ascenderHeight = font.getAscenderHeight(text, scale)
   const size = font.textHeight * this.gl.canvas.height * scale
   // Adjust the position of the text with a margin, ensuring it's vertically centered
   const textPosition = [
-    leftTopWidthHeight[0] + margin * scale + textHeight / 2,
-    leftTopWidthHeight[1] + 2 * margin * scale + textHeight - size + descenderDepth
+    leftTopWidthHeight[0] + leftTopWidthHeight[2] / 2,
+    leftTopWidthHeight[1] + (leftTopWidthHeight[3] + size * (font.fontMets!.ascender + font.fontMets!.descender)) / 2
   ] as [number, number]
-
+  const vertMid = leftTopWidthHeight[1] + leftTopWidthHeight[3] / 2
+  //this.drawLine({startEnd: [leftTopWidthHeight[0], vertMid, leftTopWidthHeight[0] + leftTopWidthHeight[2], vertMid], color: [1, 1, 1, 1]})
   // Render the text
-  this.drawText({
+  // this.drawText({
+  //   font,
+  //   position: textPosition,
+  //   text,
+  //   scale,
+  //   color: textColor,
+  //   maxWidth,
+  //   outlineColor: fontOutlineColor,
+  // })
+  this.drawRotatedText({
     font,
-    position: textPosition,
-    text,
+    xy: textPosition,
+    str: text,
     scale,
     color: textColor,
     maxWidth,
     outlineColor: fontOutlineColor,
+    alignment: HorizontalAlignment.CENTER
   })
 }
   
