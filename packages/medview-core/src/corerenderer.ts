@@ -1,4 +1,4 @@
-import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint, ButtonComponent } from '@medview/uikit'
+import { UIKit, UIKRenderer, UIKFont, Vec2, Color, Vec4, LineTerminator, LineStyle, ColorTables, UIKSVG, UIKBitmap, UIKShader, TextComponent, PanelContainerComponent, ColorbarComponent, AlignmentPoint, ButtonComponent, HorizontalAlignment } from '@medview/uikit'
 import { NiftiMeshLoader } from './loaders/nifti-mesh-loader'
 import cuboidVertexShaderSource from './shaders/cuboid.vert.glsl'
 import cuboidFragmentShaderSource from './shaders/cuboid.frag.glsl'
@@ -8,6 +8,10 @@ import { VolumeRendererComponent } from './components/volume-renderer-component'
 const fontImage = '/fonts/NotoSansHebrew-VariableFont_wght.png'
 const fontMetrics = '/fonts/NotoSansHebrew-VariableFont_wght.json'
 
+const fontMTSDFImage = '/fonts/FiraSans-Regular.png'
+const fontMTSDFMetrics = '/fonts/FiraSans-Regular.json'
+
+
 export class CoreRenderer {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
@@ -16,6 +20,7 @@ export class CoreRenderer {
   private renderer: UIKRenderer
   private defaultFont: UIKFont | null = null
   private hebrewFont: UIKFont | null = null
+  private mtsdfFont: UIKFont | null = null
   private colorTables: ColorTables = new ColorTables()
   private colorMap: string = "viridis"; // viridis
   private paperClip: UIKSVG | null = null
@@ -67,6 +72,64 @@ export class CoreRenderer {
     // this.uikit.addComponent(volumeRenderer)
 
     // Create a PanelContainerComponent with Apple-themed gradient
+   
+    const colorbar = new ColorbarComponent({
+      gl,
+      minMax: [0, 100],
+      colormapName: 'viridis',
+      bounds: [620, 10, 400, 50],
+      font: this.defaultFont!,
+      tickSpacing: 5,
+      tickLength: 15,
+      tickColor: [0, 0, 0, 1], // Black
+      labelColor: [0, 0, 0, 1], // Black
+      alignmentPoint: AlignmentPoint.BOTTOMCENTER      
+    })
+    await colorbar.init()
+
+    // Add ColorbarComponent to UIKit
+    this.uikit.addComponent(colorbar)
+
+    const button = new ButtonComponent({
+      font: this.defaultFont!, // Use the default font loaded in CoreRenderer
+      position: [300, 400], // Position the button at (300, 400)
+      text: 'Click Me', // Button text
+      textColor: [1.0, 1.0, 1.0, 1.0], // White text
+      backgroundColor: [0.0, 0.5, 1.0, 1.0], // Blue button background
+      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
+      // outlineThickness: 2, // Outline thickness
+      highlightColor: [0.7, 0.7, 0.7, 1.0], // Light gray highlight color on hover
+      buttonDownColor: [0.0, 0.4, 0.8, 1.0], // Darker blue on button down
+      onClick: (event: PointerEvent) => {
+        console.log('Button clicked!', event)
+        alert('Button clicked!')
+      },
+      scale: 0.7, // Default scale
+      // margin: 20, // Padding inside the button
+      // roundness: 0.5 // Rounded corners (50% roundness)
+    })
+
+    this.uikit.addComponent(button)
+
+    // Render the UI
+    this.uikit.draw()
+
+    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [100, 400], // Starting position of the text
+    //   str: 'Hello, MedView!', // The string to render
+    //   scale: 0.50, // Scale factor
+    //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+    //   rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+    //   outlineColor: [0, 0, 0, 1], // Outline color (black)
+    //   outlineThickness: 2 // Outline thickness
+    // })
+   // this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str: 'Hello, MTSDF', scale: 0.5, color: [0.3, 0.75, 0.75, 1.0]})
+}
+  async initalizeComponents() {
+    const gl = this.gl
     const panelContainer = new PanelContainerComponent({
       canvas: this.canvas,
       position: [0, 0],
@@ -107,67 +170,29 @@ export class CoreRenderer {
     panelContainer.addComponent(text2)
 
     // Add the panel to UIKit
-    this.uikit.addComponent(panelContainer)
+    this.uikit!.addComponent(panelContainer)
 
     
 
     // Add ColorbarComponent
     await ColorbarComponent.loadColorTables()
-    const colorbar = new ColorbarComponent({
-      gl,
-      minMax: [0, 100],
-      colormapName: 'viridis',
-      bounds: [620, 10, 400, 50],
-      font: this.defaultFont,
-      tickSpacing: 5,
-      tickLength: 15,
-      tickColor: [0, 0, 0, 1], // Black
-      labelColor: [0, 0, 0, 1], // Black
-      alignmentPoint: AlignmentPoint.BOTTOMCENTER      
-    })
-    await colorbar.init()
-
-    // Add ColorbarComponent to UIKit
-    this.uikit.addComponent(colorbar)
-
-    const button = new ButtonComponent({
-      font: this.defaultFont!, // Use the default font loaded in CoreRenderer
-      position: [300, 400], // Position the button at (300, 400)
-      text: 'Click Me', // Button text
-      textColor: [1.0, 1.0, 1.0, 1.0], // White text
-      backgroundColor: [0.0, 0.5, 1.0, 1.0], // Blue button background
-      outlineColor: [0.0, 0.0, 0.0, 1.0], // Black outline
-      // outlineThickness: 2, // Outline thickness
-      highlightColor: [0.7, 0.7, 0.7, 1.0], // Light gray highlight color on hover
-      buttonDownColor: [0.0, 0.4, 0.8, 1.0], // Darker blue on button down
-      onClick: (event: PointerEvent) => {
-        console.log('Button clicked!', event)
-        alert('Button clicked!')
-      },
-      scale: 0.7, // Default scale
-      // margin: 20, // Padding inside the button
-      // roundness: 0.5 // Rounded corners (50% roundness)
-    })
-
-    this.uikit.addComponent(button)
-
-    // Render the UI
-    this.uikit.draw()
-
-    this.renderer.drawTextBox({font: this.defaultFont, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
-
-    this.renderer.drawRotatedText({
-      font: this.defaultFont!,
-      xy: [100, 400], // Starting position of the text
-      str: 'Hello, MedView!', // The string to render
-      scale: 0.50, // Scale factor
-      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
-      outlineColor: [0, 0, 0, 1], // Outline color (black)
-      outlineThickness: 2 // Outline thickness
-    })
-}
+  }
   
+  async loadAssets() {
+    this.defaultFont = new UIKFont(this.gl)
+    await this.defaultFont.loadDefaultFont()
+    this.hebrewFont = new UIKFont(this.gl)
+    await this.hebrewFont.loadFont(fontImage, fontMetrics)
+    this.mtsdfFont = new UIKFont(this.gl)
+    await this.mtsdfFont.loadFont(fontMTSDFImage, fontMTSDFMetrics)
+    await this.colorTables.loadColormaps()
+    this.paperClip = new UIKSVG(this.gl)
+    await this.paperClip.loadSVG('/svg/paper-clip.svg')
+    this.bitmap = new UIKBitmap(this.gl)
+    await this.bitmap.loadBitmap('/images/rorden.png')
+  //  await this.initalizeComponents() 
+  }
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.gl = canvas.getContext('webgl2') as WebGL2RenderingContext
@@ -179,6 +204,8 @@ export class CoreRenderer {
     this.cuboidShader = new UIKShader(this.gl, cuboidVertexShaderSource, cuboidFragmentShaderSource)
     // Initialize the UIKRenderer
     this.renderer = new UIKRenderer(this.gl)
+    // Instantiate UIKit
+    this.uikit = new UIKit(this.gl)
     this.niftiLoader = new NiftiMeshLoader(this.gl)
 
     // Load the default font
@@ -193,14 +220,208 @@ export class CoreRenderer {
       
     // })
     // this.init().then(() => this.draw())
-    this.initUIKit()
+    this.loadAssets().then(() => this.drawText())
+    
+  }
+
+  drawWordWrappedText() {
+    const x = 350
+    const scale = 0.5
+    let color = [1, 1, 1, 1] // [0.0, 0.478, 1.0, 1.0]
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [x, 50],
+      str: 'This is a long string that will wrap if it exceeds the max width.',
+      scale,
+      color,
+      // outlineColor: [0.25, 0.25, 1, 1],
+      // rotation: -Math.PI / 2, // 30-degree rotation
+      maxWidth: 300, // Wrap to fit within 300px
+      isOutline: true,
+      alignment: HorizontalAlignment.LEFT
+    })
+
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [x, 300],
+      str: 'This is a long string that will wrap if it exceeds the max width.',
+      scale,
+      color,
+      // outlineColor: [0.25, 0.25, 1, 1],
+      // rotation: -Math.PI / 2, // 30-degree rotation
+      maxWidth: 300, // Wrap to fit within 300px
+      isOutline: true,
+      alignment: HorizontalAlignment.CENTER
+    })
+
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [x, 600],
+      str: 'This is a long string that will wrap if it exceeds the max width.',
+      scale,
+      color,
+      // outlineColor: [0.25, 0.25, 1, 1],
+      // rotation: -Math.PI / 2, // 30-degree rotation
+      maxWidth: 300, // Wrap to fit within 300px
+      isOutline: true,
+      alignment: HorizontalAlignment.RIGHT
+    })
+
+    this.renderer.drawLine({startEnd: [x, 20, x, 800], thickness: 3, color: [0, 0, 1, 0.75]})
+  }
+
+  drawDifferentSizedText() {
+    let color = [0, 0, 0, 1]     
+    this.renderer.drawRotatedText({
+      font: this.mtsdfFont!,
+      xy: [100, 400], // Starting position of the text
+      str: 'Hello, MTSDF', // The string to render
+      scale: 0.50, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      isOutline: true // Outline thickness
+    })
+
+    this.renderer.drawRotatedText({
+      font: this.mtsdfFont!,
+      xy: [275, 400], // Starting position of the text
+      str: 'Hello, MTSDF', // The string to render
+      scale: 1.0, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      isOutline: true // Outline thickness
+    })
+
+    color = [0.0, 0.478, 1.0, 0.4]
+    this.renderer.drawRotatedText({
+      font: this.mtsdfFont!,
+      xy: [600, 400], // Starting position of the text
+      str: 'Hello, MTSDF', // The string to render
+      scale: 1.50, // Scale factor
+      color, //[0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      // rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+      // outlineColor: null, //[0, 0, 0, 1], // Outline color (black)
+      isOutline: true // Outline thickness
+    })
+
+    this.renderer.drawLine({startEnd: [100, 400, 1050, 400], thickness: 3, color: [0, 0, 1, 0.75]})
+  }
+
+  drawOffsetText() {
+    const thickness = 1
+    const alpha = 1.0
+    let scale = 1.0
+    const canvasVerticalMidpoint = this.gl.canvas.height / 2
+    let color = [0.0, 0.478, 1.0, 0.4]
+    this.renderer.drawLine({startEnd: [0, canvasVerticalMidpoint, this.gl.canvas.width, canvasVerticalMidpoint], thickness, color: [0, 0, 1, alpha]})
+    const canvasHorizontalMidpoint = this.gl.canvas.width / 2
+    this.renderer.drawLine({startEnd: [canvasHorizontalMidpoint, 0, canvasHorizontalMidpoint, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
+    let str = 'Hello, Below Text j'
+    let textWidth = this.defaultFont!.getTextWidth(str, scale)
+    let x = canvasHorizontalMidpoint - textWidth 
+
+    this.renderer.drawLine({startEnd: [x, 0, x, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
+    color = [0, 1, 0, 1]
+    this.renderer.drawTextBelow({
+      font: this.mtsdfFont!,
+      xy: [x, canvasVerticalMidpoint], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      // isOutline: true, // Outline thickness
+    })
+    str = 'Hello, Above Text j'
+    textWidth = this.defaultFont!.getTextWidth(str, scale)
+    x = canvasHorizontalMidpoint + textWidth
+    color = [1, 0, 0, 1] 
+    this.renderer.drawLine({startEnd: [x, 0, x, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
+    this.renderer.drawTextAbove({
+      font: this.mtsdfFont!,
+      xy: [canvasHorizontalMidpoint + textWidth, canvasVerticalMidpoint], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, 
+      isOutline: true, // Outline thickness
+    })
+
+    color = [1, 0, 1, 1]
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [canvasHorizontalMidpoint, canvasVerticalMidpoint],
+      str: 'This is a long string that will wrap if it exceeds the max width.',
+      scale: scale * 0.75,
+      color,
+      // outlineColor: [0.25, 0.25, 1, 1],
+      // rotation: -Math.PI / 2, // 30-degree rotation
+      maxWidth: 300, // Wrap to fit within 300px
+      isOutline: true,
+      alignment: HorizontalAlignment.CENTER
+    })
+
+    str = 'Hello, Left of Text j'
+    let textHeight = this.defaultFont!.getTextHeight(str, scale)
+    let y = canvasVerticalMidpoint - textHeight 
+    this.renderer.drawLine({startEnd: [0, y, this.canvas.width, y], thickness, color: [1, 0, 0, alpha]})
+    color = [0, 0, 0, 1]
+    this.renderer.drawTextLeftOf({
+      font: this.mtsdfFont!,
+      xy: [canvasHorizontalMidpoint, y], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, 
+      // isOutline: true, // Outline thickness
+      // alignment: HorizontalAlignment.LEFT
+    })
+
+    str = 'Hello, Right of Text j'
+    textHeight = this.defaultFont!.getTextHeight(str, scale)
+    // y = canvasVerticalMidpoint - textHeight 
+    color = [1, 1, 0, 1]
+    this.renderer.drawTextRightOf({
+      font: this.mtsdfFont!,
+      xy: [canvasHorizontalMidpoint, y], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, 
+      isOutline: true, // Outline thickness
+      // alignment: HorizontalAlignment.RIGHT
+    })
+
+    
+  }
+
+  drawText() {
+    this.clear([0.75, 0.75, 0.75, 1.0])
+    // this.drawWordWrappedText()
+    // this.drawDifferentSizedText()
+    this.drawOffsetText()
+    // const str = 'M' //'Hello, MTSDF'
+    // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
+    //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
+    //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
+    // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
+    
+
+    // , style: LineStyle.DASHED, dashDotLength: 5
+    
+    
+    // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+
   }
 
   async init() {
+    // fonts
     this.defaultFont = new UIKFont(this.gl)
     await this.defaultFont.loadDefaultFont()
     this.hebrewFont = new UIKFont(this.gl)
     await this.hebrewFont.loadFont(fontImage, fontMetrics)
+    this.mtsdfFont = new UIKFont(this.gl)
+    await this.mtsdfFont.loadFont(fontMTSDFImage, fontMTSDFMetrics)
+
     await this.colorTables.loadColormaps()
     this.paperClip = new UIKSVG(this.gl)
     await this.paperClip.loadSVG('/svg/paper-clip.svg')

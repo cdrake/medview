@@ -124,3 +124,10 @@ export type Graph = {
   font: UIKFont // Font for rendering text labels
   textScale: number // Text scale
 }
+
+export enum OffsetDirection {
+  Below,
+  Above,
+  LeftOf,
+  RightOf,
+}

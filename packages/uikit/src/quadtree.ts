@@ -135,12 +135,13 @@ export class QuadTree<T extends IUIComponent> {
   }
 
   query(range: Rectangle, found: T[] = []): T[] {
+    const dpr = window.devicePixelRatio || 1
     if (!this.boundary.intersects(range)) {
       return found
     } else {
       for (const component of this.components) {
         const bounds = component.getBounds()
-        if (range.contains([bounds[0], bounds[1]])) {
+        if (range.contains([bounds[0] / dpr, bounds[1] / dpr])) {
           found.push(component)
         }
       }
