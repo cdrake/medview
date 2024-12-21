@@ -580,7 +580,18 @@ public drawCircle({
 
     const absoluteWidth = 0.33333 // Matches u_outline_width_absolute in the shader
     const relativeWidth = 0.05    // Matches u_outline_width_relative in the shader
-    const outlineVerticalOffset = isOutline ? (absoluteWidth + relativeWidth * screenPxRange) * scale : 0
+    const outlineOffset = isOutline ? (absoluteWidth + relativeWidth * screenPxRange) * scale : 0
+    let outlineHorizontalOffset = outlineOffset
+    if(isOutline) {
+      switch(alignment) {
+        case HorizontalAlignment.CENTER:
+          outlineHorizontalOffset = 0
+          break
+
+        case HorizontalAlignment.RIGHT:
+          outlineHorizontalOffset *= -1
+      }
+    }
 
     // screenPxRange *= window.devicePixelRatio || 1.0 // Adjust for DPR
     gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
@@ -635,9 +646,9 @@ public drawCircle({
     const perpendicularY = Math.cos(rotation) * lineHeight
     // console.log('perpendicular x and y',perpendicularX, perpendicularY )
     // Start from the first line's base position
-    let baselineX = xy[0]
+    let baselineX = xy[0] + outlineHorizontalOffset
     // let baselineY = xy[1] + font.textHeight * this.gl.canvas.height
-    let baselineY = xy[1] - outlineVerticalOffset // + font.textHeight * this.gl.canvas.height
+    let baselineY = xy[1] - outlineOffset // + font.textHeight * this.gl.canvas.height
     // console.log('xy', xy)
 
     // console.log('dpr', dpr)

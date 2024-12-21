@@ -266,17 +266,12 @@ export class CoreRenderer {
       isOutline: true,
       alignment: HorizontalAlignment.RIGHT
     })
+
+    this.renderer.drawLine({startEnd: [x, 20, x, 800], thickness: 3, color: [0, 0, 1, 0.75]})
   }
 
-  drawText() {
-    this.clear([0.75, 0.75, 0.75, 1.0])
-    
-    const str = 'M' //'Hello, MTSDF'
-    let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
-    //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
-    //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
-    // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
-    color = [0, 0, 0, 1]     
+  drawDifferentSizedText() {
+    let color = [0, 0, 0, 1]     
     this.renderer.drawRotatedText({
       font: this.mtsdfFont!,
       xy: [100, 400], // Starting position of the text
@@ -309,8 +304,21 @@ export class CoreRenderer {
       isOutline: true // Outline thickness
     })
 
-    // , style: LineStyle.DASHED, dashDotLength: 5
     this.renderer.drawLine({startEnd: [100, 400, 1050, 400], thickness: 3, color: [0, 0, 1, 0.75]})
+  }
+
+  drawText() {
+    this.clear([0.75, 0.75, 0.75, 1.0])
+    this.drawWordWrappedText()
+    // const str = 'M' //'Hello, MTSDF'
+    // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
+    //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
+    //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
+    // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
+    
+
+    // , style: LineStyle.DASHED, dashDotLength: 5
+    
     
     // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
 
