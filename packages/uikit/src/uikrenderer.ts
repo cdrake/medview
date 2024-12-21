@@ -577,6 +577,11 @@ public drawCircle({
     const size = font.textHeight * gl.canvas.height * scale
     let screenPxRange = (size / font.fontMets!.size) * font.fontMets!.distanceRange
     screenPxRange = Math.max(screenPxRange, 1.0) 
+
+    const absoluteWidth = 0.33333 // Matches u_outline_width_absolute in the shader
+    const relativeWidth = 0.05    // Matches u_outline_width_relative in the shader
+    const outlineVerticalOffset = isOutline ? (absoluteWidth + relativeWidth * screenPxRange) * scale : 0
+
     // screenPxRange *= window.devicePixelRatio || 1.0 // Adjust for DPR
     gl.uniform1f(rotatedFontShader.uniforms.screenPxRange, screenPxRange)
   
@@ -632,7 +637,7 @@ public drawCircle({
     // Start from the first line's base position
     let baselineX = xy[0]
     // let baselineY = xy[1] + font.textHeight * this.gl.canvas.height
-    let baselineY = xy[1]// + font.textHeight * this.gl.canvas.height
+    let baselineY = xy[1] - outlineVerticalOffset // + font.textHeight * this.gl.canvas.height
     // console.log('xy', xy)
 
     // console.log('dpr', dpr)

@@ -269,7 +269,7 @@ export class CoreRenderer {
   }
 
   drawText() {
-    this.clear([0.5, 0.5, 0.5, 1.0])
+    this.clear([0.75, 0.75, 0.75, 1.0])
     
     const str = 'M' //'Hello, MTSDF'
     let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
@@ -308,6 +308,9 @@ export class CoreRenderer {
       // outlineColor: null, //[0, 0, 0, 1], // Outline color (black)
       isOutline: true // Outline thickness
     })
+
+    // , style: LineStyle.DASHED, dashDotLength: 5
+    this.renderer.drawLine({startEnd: [100, 400, 1050, 400], thickness: 3, color: [0, 0, 1, 0.75]})
     
     // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
 
