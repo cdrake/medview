@@ -307,9 +307,84 @@ export class CoreRenderer {
     this.renderer.drawLine({startEnd: [100, 400, 1050, 400], thickness: 3, color: [0, 0, 1, 0.75]})
   }
 
+  drawOffsetText() {
+    const thickness = 1
+    const alpha = 1.0
+    let scale = 1.0
+    const canvasVerticalMidpoint = this.gl.canvas.height / 2
+    let color = [0.0, 0.478, 1.0, 0.4]
+    this.renderer.drawLine({startEnd: [0, canvasVerticalMidpoint, this.gl.canvas.width, canvasVerticalMidpoint], thickness, color: [0, 0, 1, alpha]})
+    const canvasHorizontalMidpoint = this.gl.canvas.width / 2
+    this.renderer.drawLine({startEnd: [canvasHorizontalMidpoint, 0, canvasHorizontalMidpoint, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
+    let str = 'Hello, Below Text j'
+    let textWidth = this.defaultFont!.getTextWidth(str, scale)
+    let x = canvasHorizontalMidpoint - textWidth 
+
+    this.renderer.drawLine({startEnd: [x, 0, x, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
+    color = [0, 1, 0, 1]
+    this.renderer.drawTextBelow({
+      font: this.mtsdfFont!,
+      xy: [x, canvasVerticalMidpoint], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
+      // isOutline: true, // Outline thickness
+    })
+    str = 'Hello, Above Text j'
+    textWidth = this.defaultFont!.getTextWidth(str, scale)
+    x = canvasHorizontalMidpoint + textWidth
+    color = [1, 0, 0, 1] 
+    this.renderer.drawLine({startEnd: [x, 0, x, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
+    this.renderer.drawTextAbove({
+      font: this.mtsdfFont!,
+      xy: [canvasHorizontalMidpoint + textWidth, canvasVerticalMidpoint], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, 
+      isOutline: true, // Outline thickness
+    })
+
+    str = 'Hello, Left of Text j'
+    let textHeight = this.defaultFont!.getTextHeight(str, scale)
+    let y = canvasVerticalMidpoint - textHeight 
+    this.renderer.drawLine({startEnd: [0, y, this.canvas.width, y], thickness, color: [1, 0, 0, alpha]})
+    color = [0, 0, 0, 1]
+    this.renderer.drawTextLeftOf({
+      font: this.mtsdfFont!,
+      xy: [canvasHorizontalMidpoint, y], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, 
+      // isOutline: true, // Outline thickness
+      // alignment: HorizontalAlignment.LEFT
+    })
+
+    str = 'Hello, Right of Text j'
+    textHeight = this.defaultFont!.getTextHeight(str, scale)
+    // y = canvasVerticalMidpoint - textHeight 
+    color = [1, 1, 0, 1]
+    this.renderer.drawTextRightOf({
+      font: this.mtsdfFont!,
+      xy: [canvasHorizontalMidpoint, y], // Starting position of the text
+      str, // The string to render
+      scale, // Scale factor
+      color, // Text color (orange)
+      rotation: 0, 
+      isOutline: true, // Outline thickness
+      // alignment: HorizontalAlignment.RIGHT
+    })
+
+    
+  }
+
   drawText() {
     this.clear([0.75, 0.75, 0.75, 1.0])
-    this.drawWordWrappedText()
+    // this.drawWordWrappedText()
+    // this.drawDifferentSizedText()
+    this.drawOffsetText()
     // const str = 'M' //'Hello, MTSDF'
     // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
     //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })

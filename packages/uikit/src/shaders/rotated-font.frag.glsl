@@ -16,6 +16,7 @@ void main() {
         vec4 distances = texture(fontTexture, vUV);
         float d_msdf = median(distances.r, distances.g, distances.b);
         float screenPxDistance = screenPxRange * (d_msdf - 0.5);
+
         float fontOpacity = clamp(screenPxDistance + 0.5, 0.0, 1.0) * fontColor.a;
         if (!isOutline) {
                 color = vec4(fontColor.rgb, fontOpacity);

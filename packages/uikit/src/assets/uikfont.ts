@@ -11,6 +11,11 @@ import { UIKAsset } from './uikasset.js'
 export type FontMetrics = {
   distanceRange: number
   size: number
+  ascender: number
+  descender: number
+  underlineY: number
+  underlineThickness: number
+  lineHeight: number
   mets: Record<
   string,
     {
@@ -75,6 +80,11 @@ export class UIKFont extends UIKAsset {
     this.fontMets = {
       distanceRange: this.fontMetrics.atlas.distanceRange,
       size: this.fontMetrics.atlas.size,
+      ascender: this.fontMetrics.metrics.ascender,
+      descender: this.fontMetrics.metrics.descender,
+      underlineY: this.fontMetrics.metrics.underlineY,
+      underlineThickness: this.fontMetrics.metrics.underlineThickness,
+      lineHeight: this.fontMetrics.metrics.lineHeight,
       mets: {}
     }
 
