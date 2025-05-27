@@ -37,19 +37,21 @@ function loose_label(min: number, max: number, ntick = 4): [number, number, numb
 
 // "Nice Numbers for Graph Labels", Graphics Gems, pp 61-63
 // https://github.com/cenfun/nice-ticks/blob/master/docs/Nice-Numbers-for-Graph-Labels.pdf
-export function tickSpacing(mn: number, mx: number): number[] {
-  let v = loose_label(mn, mx, 3)
-  if (!v[3]) {
-    v = loose_label(mn, mx, 5)
-  }
-  if (!v[3]) {
-    v = loose_label(mn, mx, 4)
-  }
-  if (!v[3]) {
-    v = loose_label(mn, mx, 3)
-  }
-  if (!v[3]) {
-    v = loose_label(mn, mx, 5)
-  }
+
+/**
+ * Computes tick spacing for an axis given a data range and desired number of ticks.
+ * @param mn - Minimum data value
+ * @param mx - Maximum data value
+ * @param tickCount - Desired number of intervals (default: 5)
+ * @returns [step, start, end]
+ */
+export function tickSpacing(
+  mn: number,
+  mx: number,
+  tickCount: number = 5
+): [number, number, number] {
+  // Use the loose_label algorithm to compute nice step and endpoints
+  const v = loose_label(mn, mx, tickCount)
+  // v[0]: step size, v[1]: nice minimum, v[2]: nice maximum
   return [v[0], v[1], v[2]]
 }
