@@ -70,7 +70,7 @@ export function drawBarGraph({
   if (yAxisLabel) {
     const labelX = x0 - yAxisLabelOffset
     const labelY = y0 + height / 2
-    renderer.drawRotatedText({ font, xy: [labelX, labelY], str: yAxisLabel, scale, color: labelColor, rotation: -Math.PI/2, alignment: 1 })
+    renderer.drawRotatedText({ font, position: [labelX, labelY], text: yAxisLabel, scale, color: labelColor, rotation: -Math.PI/2, alignment: 1 })
   }
 
   // Draw each bar
@@ -112,8 +112,8 @@ export function drawBarGraph({
   const labelY = y0 + height + xAxisLabelOffset
   renderer.drawTextCenteredOn({
     font,
-    xy: [labelX, labelY],
-    str: xAxisLabel,
+    position: [labelX, labelY],
+    text: xAxisLabel,
     scale,
     color: labelColor
   })

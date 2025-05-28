@@ -186,8 +186,8 @@ export class SliderComponent extends BaseUIComponent {
     // Draw the value text
     renderer.drawRotatedText({
       font,
-      xy: [textX, textY],
-      str: valueText,
+      position: [textX, textY],
+      text: valueText,
       scale,
       color: valueTextColor,
       outlineColor: [0, 0, 0, 1.0],

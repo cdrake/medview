@@ -129,7 +129,7 @@ export class RulerComponent extends BaseUIComponent implements IProjectable2D {
     }
 
     // Draw the rotated length text at the adjusted position
-    renderer.drawRotatedText({ font, xy: textPosition, str: text, scale, color: textColor, outlineColor, rotation: angle })
+    renderer.drawRotatedText({ font, position: textPosition, text, scale, color: textColor, outlineColor, rotation: angle })
 
     // Draw the units at half the requested scale
     const unitsScale = scale / 2
@@ -140,8 +140,8 @@ export class RulerComponent extends BaseUIComponent implements IProjectable2D {
     ]
     renderer.drawRotatedText({
       font,
-      xy: unitsTextPosition,
-      str: units,
+      position: unitsTextPosition,
+      text: units,
       scale: unitsScale,
       color: textColor,
       outlineColor,
@@ -203,8 +203,8 @@ export class RulerComponent extends BaseUIComponent implements IProjectable2D {
         if (showTickmarkNumbers) {
           renderer.drawRotatedText({
             font,
-            xy: hashTextPosition,
-            str: hashText,
+            position: hashTextPosition,
+            text: hashText,
             scale: hashTextScale,
             color: textColor,
             outlineColor,

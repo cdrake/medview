@@ -89,8 +89,8 @@ export function drawSlider(this: UIKRenderer, cfg: SliderConfig): void {
   const labelY = y + height + knobSize / 2 + 5
   this.drawTextCenteredOn({
     font,
-    xy: [labelX, labelY],
-    str: v.toFixed(2),
+    position: [labelX, labelY],
+    text: v.toFixed(2),
     scale,
     color: valueTextColor
   })

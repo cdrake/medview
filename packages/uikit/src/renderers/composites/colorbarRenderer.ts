@@ -100,8 +100,8 @@ export function drawColorbar(
     // Draw label using text renderer
     drawText(gl, {
       font,
-      xy: [labelX, labelY],
-      str: label,
+      position: [labelX, labelY],
+      text: label,
       scale: 0.5,
       color: labelColor
     })

@@ -12,7 +12,7 @@ import type { Vec2, Color } from '../../types.js'
  */
 export interface TextBoxConfig {
   font: UIKFont
-  xy: Vec2                // Top-left corner of the box
+  position: Vec2                // Top-left corner of the box
   text: string            // Text to render inside the box
   textColor?: Color       // Color of the text
   outlineColor?: Color    // Color of the box outline
@@ -30,7 +30,7 @@ export function drawTextBox(
   gl: WebGL2RenderingContext,
   {
     font,
-    xy,
+    position,
     text,
     textColor = [0, 0, 0, 1],
     outlineColor = [1, 1, 1, 1],
@@ -53,7 +53,7 @@ export function drawTextBox(
   const width = wrappedSize[0] + 2 * margin * scale + textHeight
   const height = wrappedSize[1] + 4 * margin * scale
 
-  const bounds = [xy[0], xy[1], width, height] as [number, number, number, number]
+  const bounds = [position[0], position[1], width, height] as [number, number, number, number]
 
   // Draw rounded background
   drawRoundedRect(gl, {
@@ -65,20 +65,20 @@ export function drawTextBox(
   })
 
   // Center line separator
-  const midY = xy[1] + height / 2
+  const midY = position[1] + height / 2
   drawLine(gl, {
-    startEnd: [xy[0], midY, xy[0] + width, midY],
+    startEnd: [position[0], midY, position[0] + width, midY],
     color: outlineColor,
     thickness: 1
   })
 
   // Draw centered text
-  const centerX = xy[0] + width / 2
-  const centerY = xy[1] + height / 2
+  const centerX = position[0] + width / 2
+  const centerY = position[1] + height / 2
   drawTextCenteredOn(gl, {
     font,
-    xy: [centerX, centerY],
-    str: text,
+    position: [centerX, centerY],
+    text,
     scale,
     color: textColor,
     maxWidth,

@@ -114,19 +114,19 @@ export class CoreRenderer {
     // Render the UI
     this.uikit.draw()
 
-    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+    this.renderer.drawTextBox({font: this.defaultFont!, position:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
 
     // this.renderer.drawRotatedText({
     //   font: this.defaultFont!,
-    //   xy: [100, 400], // Starting position of the text
-    //   str: 'Hello, MedView!', // The string to render
+    //   position: [100, 400], // Starting position of the text
+    //   text: 'Hello, MedView!', // The string to render
     //   scale: 0.50, // Scale factor
     //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
     //   rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
     //   outlineColor: [0, 0, 0, 1], // Outline color (black)
     //   outlineThickness: 2 // Outline thickness
     // })
-   // this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str: 'Hello, MTSDF', scale: 0.5, color: [0.3, 0.75, 0.75, 1.0]})
+   // this.renderer.drawMTSDFText({font: this.mtsdfFont!, position: [400, 100], text: 'Hello, MTSDF', scale: 0.5, color: [0.3, 0.75, 0.75, 1.0]})
 }
   async initalizeComponents() {
     const gl = this.gl
@@ -230,8 +230,8 @@ export class CoreRenderer {
     let color = [1, 1, 1, 1] // [0.0, 0.478, 1.0, 1.0]
     this.renderer.drawRotatedText({
       font: this.defaultFont!,
-      xy: [x, 50],
-      str: 'This is a long string that will wrap if it exceeds the max width.',
+      position: [x, 50],
+      text: 'This is a long string that will wrap if it exceeds the max width.',
       scale,
       color,
       // outlineColor: [0.25, 0.25, 1, 1],
@@ -243,8 +243,8 @@ export class CoreRenderer {
 
     this.renderer.drawRotatedText({
       font: this.defaultFont!,
-      xy: [x, 300],
-      str: 'This is a long string that will wrap if it exceeds the max width.',
+      position: [x, 300],
+      text: 'This is a long string that will wrap if it exceeds the max width.',
       scale,
       color,
       // outlineColor: [0.25, 0.25, 1, 1],
@@ -256,8 +256,8 @@ export class CoreRenderer {
 
     this.renderer.drawRotatedText({
       font: this.defaultFont!,
-      xy: [x, 600],
-      str: 'This is a long string that will wrap if it exceeds the max width.',
+      position: [x, 600],
+      text: 'This is a long string that will wrap if it exceeds the max width.',
       scale,
       color,
       // outlineColor: [0.25, 0.25, 1, 1],
@@ -274,8 +274,8 @@ export class CoreRenderer {
     let color = [0, 0, 0, 1]     
     this.renderer.drawRotatedText({
       font: this.mtsdfFont!,
-      xy: [100, 400], // Starting position of the text
-      str: 'Hello, MTSDF', // The string to render
+      position: [100, 400], // Starting position of the text
+      text: 'Hello, MTSDF', // The string to render
       scale: 0.50, // Scale factor
       color, // Text color (orange)
       rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
@@ -284,8 +284,8 @@ export class CoreRenderer {
 
     this.renderer.drawRotatedText({
       font: this.mtsdfFont!,
-      xy: [275, 400], // Starting position of the text
-      str: 'Hello, MTSDF', // The string to render
+      position: [275, 400], // Starting position of the text
+      text: 'Hello, MTSDF', // The string to render
       scale: 1.0, // Scale factor
       color, // Text color (orange)
       rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
@@ -295,8 +295,8 @@ export class CoreRenderer {
     color = [0.0, 0.478, 1.0, 0.4]
     this.renderer.drawRotatedText({
       font: this.mtsdfFont!,
-      xy: [600, 400], // Starting position of the text
-      str: 'Hello, MTSDF', // The string to render
+      position: [600, 400], // Starting position of the text
+      text: 'Hello, MTSDF', // The string to render
       scale: 1.50, // Scale factor
       color, //[0.3, 0.75, 0.75, 1.0], // Text color (orange)
       // rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
@@ -341,8 +341,8 @@ export class CoreRenderer {
   let color: Color = [0, 1, 0, 1]
   this.renderer.drawTextBelow({
     font: this.defaultFont!,
-    xy: [x, canvasVerticalMidpoint],
-    str,
+    position: [x, canvasVerticalMidpoint],
+    text: str,
     scale,
     color,
     rotation: 0
@@ -360,8 +360,8 @@ export class CoreRenderer {
   color = [1, 0, 0, 1]
   this.renderer.drawTextAbove({
     font: this.defaultFont!,
-    xy: [x, canvasVerticalMidpoint],
-    str,
+    position: [x, canvasVerticalMidpoint],
+    text: str,
     scale,
     color,
     rotation: 0,
@@ -372,8 +372,8 @@ export class CoreRenderer {
   color = [1, 0, 1, 1]
   this.renderer.drawRotatedText({
     font: this.defaultFont!,
-    xy: [canvasHorizontalMidpoint, canvasVerticalMidpoint],
-    str: 'This is a long string that will wrap if it exceeds the max width.',
+    position: [canvasHorizontalMidpoint, canvasVerticalMidpoint],
+    text: 'This is a long string that will wrap if it exceeds the max width.',
     scale: scale * 0.75,
     color,
     maxWidth: 300,
@@ -393,8 +393,8 @@ export class CoreRenderer {
   color = [0, 0, 0, 1]
   this.renderer.drawTextLeftOf({
     font: this.defaultFont!,
-    xy: [canvasHorizontalMidpoint, y],
-    str,
+    position: [canvasHorizontalMidpoint, y],
+    text: str,
     scale,
     color,
     rotation: 0
@@ -407,8 +407,8 @@ export class CoreRenderer {
   color = [1, 1, 0, 1]
   this.renderer.drawTextRightOf({
     font: this.defaultFont!,
-    xy: [canvasHorizontalMidpoint, y],
-    str,
+    position: [canvasHorizontalMidpoint, y],
+    text: str,
     scale,
     color,
     rotation: 0,
@@ -424,20 +424,20 @@ export class CoreRenderer {
   //   this.drawOffsetText()
   //   // const str = 'M' //'Hello, MTSDF'
   //   // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
-  //   //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
-  //   //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
+  //   //this.renderer.drawMTSDFText({font: this.mtsdfFont!, position: [400, 100], str, scale: 0.5, color })
+  //   //drawMTSDFText(font: UIKFont, position: number[], text: string, scale = 1, color: Float32List | null = null): void {
   //   // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
     
 
   //   // , style: LineStyle.DASHED, dashDotLength: 5
     
     
-  //   // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+  //   // this.renderer.drawTextBox({font: this.defaultFont!, position:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
   //   // this.drawComponents()
   // }
 
   drawComponents() {
-    this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [0, 0, 0, 1], outlineColor: [1, 1, 1, 1], fontOutlineColor: [1, 1, 1, 1], roundness: 1.0, fillColor: [0, 0.5, 0.7, 1]})
+    this.renderer.drawTextBox({font: this.defaultFont!, position:[500, 300], text: 'Hello, world!', textColor: [0, 0, 0, 1], outlineColor: [1, 1, 1, 1], fontOutlineColor: [1, 1, 1, 1], roundness: 1.0, fillColor: [0, 0.5, 0.7, 1]})
   }
 
   async init() {
@@ -722,8 +722,8 @@ async draw(): Promise<void> {
     console.log('default font', this.defaultFont)
     this.renderer.drawRotatedText({
       font: this.defaultFont!,
-      xy: [100, 300], // Starting position of the text
-      str: 'Hello, MedView!', // The string to render
+      position: [100, 300], // Starting position of the text
+      text: 'Hello, MedView!', // The string to render
       scale: 0.50, // Scale factor
       color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
       rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
@@ -747,8 +747,8 @@ async draw(): Promise<void> {
 
     // this.renderer.drawRotatedText({
     //   font: this.defaultFont!,
-    //   xy: [500, 200],
-    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+    //   position: [500, 200],
+    //   text: 'This is a long string that will wrap if it exceeds the maxWidth.',
     //   scale: 0.5,
     //   color: [1, 1, 1, 1],
     //   outlineColor: [0.25, 0.25, 1, 1],
@@ -759,8 +759,8 @@ async draw(): Promise<void> {
     // // if(this.hebrewFont) {
     // // this.renderer.drawRotatedText({
     // //   font: this.hebrewFont,
-    // //   xy: [800, 500],
-    // //   str: 'שָׁלוֹם עֲלֵיכֶם',
+    // //   position: [800, 500],
+    // //   text: 'שָׁלוֹם עֲלֵיכֶם',
     // //   scale: 0.5,
     // //   color: [1, 1, 1, 1],
     // //   outlineColor: [0.25, 0.25, 1, 1],

@@ -5,6 +5,7 @@ import { UIKRenderer } from '../../uikrenderer.js'
 import type { Vec2, Color } from '../../types.js'
 import { HorizontalAlignment, OffsetDirection } from '../../types.js'
 import { UIKFont } from '../../assets/uikfont.js'
+import { calculateOuterColor } from './textUtils.js'
 
 /** Configuration for rotated text rendering */
 export interface RotatedTextConfig {
@@ -20,120 +21,142 @@ export interface RotatedTextConfig {
   alignment?: HorizontalAlignment
 }
 
+ /**
+ * Draws rotated text, supporting individual character rendering,
+ * high-DPI scaling, outlines, wrapping and alignment.
+ */
 export function drawRotatedText(
   gl: WebGL2RenderingContext,
   {
-    font,
-    position,
-    text,
-    scale = 1.0,
-    color = [1, 0, 0, 1],
-    rotation = 0,
-    outlineColor = null,
-    isOutline = false,
-    maxWidth = 0,
-    alignment = HorizontalAlignment.LEFT
-  }: RotatedTextConfig
-): void {
-  if (!font.isFontLoaded) throw new Error('Font not loaded')
+  font,
+  position,
+  text,
+  scale = 1.0,
+  color = [1, 0, 0, 1],
+  rotation = 0,
+  outlineColor = [0, 0, 0, 1],
+  isOutline = false,
+  maxWidth = 0,
+  alignment = HorizontalAlignment.LEFT
+}: RotatedTextConfig): void {
+  if (!font.isFontLoaded) throw new Error('font not loaded');
+  if (!UIKRenderer.rotatedFontShader) throw new Error('rotatedTextShader undefined');
 
-  const shader = UIKRenderer.rotatedFontShader
-  if (!shader) throw new Error('rotatedFontShader undefined')
+  const shader = UIKRenderer.rotatedFontShader;
 
-  gl.activeTexture(gl.TEXTURE0)
-  gl.bindTexture(gl.TEXTURE_2D, font.getTexture())
-  shader.use(gl)
+  // bind font texture & shader
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, font.getTexture());
+  shader.use(gl);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.disable(gl.DEPTH_TEST);
+  gl.disable(gl.CULL_FACE);
 
-  gl.enable(gl.BLEND)
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-  gl.disable(gl.DEPTH_TEST)
-  gl.disable(gl.CULL_FACE)
+  // figure outline color
+  const finalOutline = isOutline
+    ? (outlineColor || calculateOuterColor(color))
+    : [color[0], color[1], color[2], 0];
+  gl.uniform4fv(shader.uniforms.fontColor, color);
+  gl.uniform4fv(shader.uniforms.outlineColor, finalOutline);
 
-  const finalColor = color
-  if (!outlineColor) outlineColor = [0, 0, 0, 0]
+  // compute sizing/uniforms
+  const sizePx     = font.textHeight * gl.canvas.height * scale;
+  let   pxRange    = (sizePx / font.fontMets!.size) * font.fontMets!.distanceRange;
+  pxRange          = Math.max(pxRange, 1.0);
+  const dpr        = window.devicePixelRatio || 1.0;
+  const canvasWH   = [gl.canvas.width * dpr, gl.canvas.height * dpr];
 
-  gl.uniform4fv(shader.uniforms.fontColor, finalColor as Float32List)
-  gl.uniform4fv(
-    shader.uniforms.outlineColor,
-    isOutline
-      ? (outlineColor as Float32List)
-      : new Float32Array([finalColor[0], finalColor[1], finalColor[2], 0])
-  )
+  gl.uniform1f(shader.uniforms.screenPxRange, pxRange);
+  gl.uniform1i(shader.uniforms.isOutline, isOutline ? 1 : 0);
+  gl.uniform2fv(shader.uniforms.canvasWidthHeight, canvasWH);
 
-  // Compute orthographic projection
-  const ortho = mat4.create()
-  mat4.ortho(ortho, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1)
+  // bind quad VAO
+  gl.bindVertexArray(UIKRenderer.genericVAO);
 
-  // Word-wrap into lines
-  const words = text.split(' ')
-  const lines: string[] = maxWidth > 0
-    ? words.reduce<string[]>((acc, w) => {
-        const last = acc[acc.length - 1] || ''
-        const test = last ? last + ' ' + w : w
-        return font.getTextWidth(test, scale) > maxWidth
-          ? [...acc, w]
-          : [...acc.slice(0, -1), test]
-      }, [''])
-    : [text]
+  // set up ortho
+  const ortho = mat4.create();
+  mat4.ortho(ortho, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
 
-  const lineHeight = font.getTextHeight(text, scale)
-  const perpX = -Math.sin(rotation) * lineHeight
-  const perpY =  Math.cos(rotation) * lineHeight
-
-  let baseX = position[0]
-  let baseY = position[1]
-
-  for (const line of lines) {
-    // compute alignment offset along the line
-    const lw = font.getTextWidth(line, scale)
-    let ax = 0, ay = 0
-    if (alignment === HorizontalAlignment.CENTER) {
-      ax = -Math.cos(rotation) * lw / 2
-      ay = -Math.sin(rotation) * lw / 2
+  // word‐wrap
+  const words = text.split(' ');
+  const lines: string[] = [];
+  if (maxWidth > 0) {
+    let line = '';
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      if (font.getTextWidth(test, scale) > maxWidth) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
     }
-    if (alignment === HorizontalAlignment.RIGHT) {
-      ax = -Math.cos(rotation) * lw
-      ay = -Math.sin(rotation) * lw
-    }
-
-    const model = mat4.create()
-    mat4.translate(model, model, [baseX + ax, baseY + ay, 0])
-    mat4.rotateZ(model, model, rotation)
-
-    let curX = 0
-    for (const ch of Array.from(line)) {
-      const mets = font.fontMets!.mets[ch]
-      if (!mets) continue
-
-      // character quad size & offset in screen pixels
-      const w = mets.lbwh[2] * font.textHeight * gl.canvas.height * scale
-      const h = mets.lbwh[3] * font.textHeight * gl.canvas.height * scale
-      const xOff = mets.lbwh[0] * font.textHeight * gl.canvas.height * scale
-      const yOff = mets.lbwh[1] * font.textHeight * gl.canvas.height * scale
-
-      const charMat = mat4.clone(model)
-      mat4.translate(charMat, charMat, [curX + xOff, -yOff, 0])
-      mat4.scale(charMat, charMat, [w, -h, 1])
-
-      const mvp = mat4.create()
-      mat4.multiply(mvp, ortho, charMat)
-      gl.uniformMatrix4fv(shader.uniforms.modelViewProjectionMatrix, false, mvp)
-      gl.uniform4fv(shader.uniforms.uvLeftTopWidthHeight, mets.uv_lbwh as Float32List)
-
-      gl.bindVertexArray(UIKRenderer.genericVAO)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-      curX += mets.xadv * font.textHeight * gl.canvas.height * scale
-    }
-
-    baseX += perpX
-    baseY += perpY
+    if (line) lines.push(line);
+  } else {
+    lines.push(text);
   }
 
-  gl.bindVertexArray(null)
+  // line stepping
+  const lineHeight = font.getTextHeight(text, scale);
+  const perpX = -Math.sin(rotation) * lineHeight;
+  const perpY =  Math.cos(rotation) * lineHeight;
+
+  // start at baseline
+  let baseX = position[0];
+  let baseY = position[1] - (isOutline
+    ? ((1/3 + pxRange * 0.05) * scale)
+    : 0
+  );
+
+  for (const line of lines) {
+    const w = font.getTextWidth(line, scale);
+    let alignX = 0, alignY = 0;
+    if (alignment === HorizontalAlignment.CENTER) {
+      alignX = -Math.cos(rotation) * w * 0.5;
+      alignY = -Math.sin(rotation) * w * 0.5;
+    } else if (alignment === HorizontalAlignment.RIGHT) {
+      alignX = -Math.cos(rotation) * w;
+      alignY = -Math.sin(rotation) * w;
+    }
+    // build model matrix
+    const M = mat4.create();
+    mat4.translate(M, M, [baseX + alignX, baseY + alignY, 0]);
+    mat4.rotateZ(M, M, rotation);
+
+    let cursorX = 0;
+    for (const ch of Array.from(line)) {
+      const met = font.fontMets!.mets[ch];
+      if (!met) continue;
+
+      const cw = met.lbwh[2] * sizePx,
+            chh= met.lbwh[3] * sizePx,
+            ox = met.lbwh[0] * sizePx,
+            oy = met.lbwh[1] * sizePx;
+
+      const charM = mat4.clone(M);
+      mat4.translate(charM, charM, [cursorX + ox, -oy, 0]);
+      mat4.scale(charM, charM, [cw, -chh, 1]);
+
+      const mvp = mat4.create();
+      mat4.multiply(mvp, ortho, charM);
+      gl.uniformMatrix4fv(shader.uniforms.modelViewProjectionMatrix, false, mvp);
+      gl.uniform4fv(shader.uniforms.uvLeftTopWidthHeight, met.uv_lbwh);
+
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      cursorX += met.xadv * sizePx;
+    }
+
+    baseX += perpX;
+    baseY += perpY;
+  }
+
+  gl.bindVertexArray(null);
 }
 
 
-/** Configuration for text with offset directions */
+
+/** Configuration for directional offset text */
 export interface TextOffsetConfig {
   font: UIKFont
   position: Vec2
@@ -200,15 +223,15 @@ export function drawTextOffset(
 
 
 /** Convenience draw methods */
-export const drawText               = (gl: WebGL2RenderingContext, cfg: RotatedTextConfig) =>
+export const drawText           = (gl: WebGL2RenderingContext, cfg: RotatedTextConfig) =>
   drawRotatedText(gl, { ...cfg, rotation: 0 })
-export const drawTextBelow          = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
+export const drawTextBelow      = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
   drawTextOffset(gl, { ...cfg, direction: OffsetDirection.Below })
-export const drawTextAbove          = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
+export const drawTextAbove      = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
   drawTextOffset(gl, { ...cfg, direction: OffsetDirection.Above })
-export const drawTextLeftOf         = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
+export const drawTextLeftOf     = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
   drawTextOffset(gl, { ...cfg, direction: OffsetDirection.LeftOf })
-export const drawTextRightOf        = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
+export const drawTextRightOf    = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
   drawTextOffset(gl, { ...cfg, direction: OffsetDirection.RightOf })
-export const drawTextCenteredOn     = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
+export const drawTextCenteredOn = (gl: WebGL2RenderingContext, cfg: TextOffsetConfig) =>
   drawTextOffset(gl, { ...cfg, direction: OffsetDirection.CenteredOn })

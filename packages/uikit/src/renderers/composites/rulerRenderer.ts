@@ -75,7 +75,7 @@ export function drawRuler({
   }
 
   // Draw length label
-  renderer.drawRotatedText({ font, xy: textPos, str: text, scale, color: textColor, outlineColor, rotation: angle })
+  renderer.drawRotatedText({ font, position: textPos, text, scale, color: textColor, outlineColor, rotation: angle })
 
   // Draw units next to length
   const us = scale / 2
@@ -84,7 +84,7 @@ export function drawRuler({
     textPos[0] + (textW + uW/4) * Math.cos(angle),
     textPos[1] + (textW + uW/4) * Math.sin(angle)
   ]
-  renderer.drawRotatedText({ font, xy: unitsPos, str: units, scale: us, color: textColor, outlineColor, rotation: angle })
+  renderer.drawRotatedText({ font, position: unitsPos, text: units, scale: us, color: textColor, outlineColor, rotation: angle })
 
   // Parallel line offset above original
   const pxA: Vec2 = [pointA[0] + (offset * deltaY)/actualLength, pointA[1] - (offset * deltaX)/actualLength]
@@ -116,7 +116,7 @@ export function drawRuler({
         x0+perpX - (lW/2)*Math.cos(angle) + (hLen/4)*Math.sin(angle),
         y0+perpY - (lW/2)*Math.sin(angle) - (hLen/4)*Math.cos(angle)
       ]
-      renderer.drawRotatedText({ font, xy: labelPos, str: label, scale: ts, color: textColor, outlineColor, rotation: angle })
+      renderer.drawRotatedText({ font, position: labelPos, text: label, scale: ts, color: textColor, outlineColor, rotation: angle })
     }
 
     // Draw hash mark

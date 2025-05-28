@@ -68,7 +68,7 @@ export function drawLineGraph({
     const frac = (v - minY) / (maxY - minY)
     const y = y0 + height - frac * height
     drawLine(renderer.gl, { startEnd: [x0 - 5, y, x0, y], thickness: 1, color: labelColor })
-    drawText(renderer.gl, { font, xy: [x0 - 10, y], str: v.toFixed(2), scale, color: labelColor })
+    drawText(renderer.gl, { font, position: [x0 - 10, y], text: v.toFixed(2), scale, color: labelColor })
   }
 
   // Optional Y-axis label
@@ -77,8 +77,8 @@ export function drawLineGraph({
     const labelY = y0 + height / 2
     drawRotatedText(renderer.gl, {
       font,
-      xy: [labelX, labelY],
-      str: yAxisLabel,
+      position: [labelX, labelY],
+      text: yAxisLabel,
       scale,
       color: labelColor,
       rotation: -Math.PI / 2,
@@ -111,6 +111,6 @@ export function drawLineGraph({
   if (xAxisLabel) {
     const labelX = x0 + width / 2
     const labelY = y0 + height + xAxisLabelOffset
-    drawTextCenteredOn(renderer.gl, { font, xy: [labelX, labelY], str: xAxisLabel, scale, color: labelColor })
+    drawTextCenteredOn(renderer.gl, { font, position: [labelX, labelY], text: xAxisLabel, scale, color: labelColor })
   }
 }
