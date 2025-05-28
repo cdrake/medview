@@ -63,7 +63,7 @@ export function drawBarGraph({
     // Tick mark
     renderer.drawLine({ startEnd: [x0 - 5, y, x0, y], thickness: 1, color: labelColor })
     // Label
-    renderer.drawText({ font, xy: [x0 - 10, y], str: v.toFixed(2), scale, color: labelColor })
+    renderer.drawText({ font, position: [x0 - 10, y], text: v.toFixed(2), scale, color: labelColor })
   }
 
   // Optional Y-axis label
@@ -98,7 +98,7 @@ export function drawBarGraph({
       const tW = font.getTextWidth(txt, scale)
       const tx = x + (barWidth - tW) / 2
       const ty = y0 + height + 5
-      renderer.drawText({ font, xy: [tx, ty], str: txt, scale, color: labelColor })
+      renderer.drawText({ font, position: [tx, ty], text: txt, scale, color: labelColor })
     }
   }
 

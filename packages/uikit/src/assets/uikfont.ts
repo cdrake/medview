@@ -2,10 +2,10 @@ import { vec2 } from 'gl-matrix'
 import { UIKShader } from '../uikshader.js'
 import vertRotatedFontShader from '../shaders/rotated-font.vert.glsl'
 import fragRotatedFontShader from '../shaders/rotated-font.frag.glsl'
-import defaultFontPNG from '../fonts/FiraSans-Regular.png'
-import defaultFontMetrics from '../fonts/FiraSans-Regular.json' assert { type: 'json' }
-// import defaultFontPNG from '../fonts/NotoSansTC-VariableFont_wght.png'
-// import defaultFontMetrics from '../fonts/NotoSansTC-VariableFont_wght.json' assert { type: 'json' }
+// import defaultFontPNG from '../fonts/FiraSans-Regular.png'
+// import defaultFontMetrics from '../fonts/FiraSans-Regular.json' assert { type: 'json' }
+import defaultFontPNG from '../fonts/Roboto-Regular.png'
+import defaultFontMetrics from '../fonts/Roboto-Regular.json' assert { type: 'json' }
 import { UIKAsset } from './uikasset.js'
 
 export type FontMetrics = {

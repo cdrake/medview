@@ -307,111 +307,134 @@ export class CoreRenderer {
     this.renderer.drawLine({startEnd: [100, 400, 1050, 400], thickness: 3, color: [0, 0, 1, 0.75]})
   }
 
-  drawOffsetText() {
-    const thickness = 1
-    const alpha = 1.0
-    let scale = 1.0
-    const canvasVerticalMidpoint = this.gl.canvas.height / 2
-    let color = [0.0, 0.478, 1.0, 0.4]
-    this.renderer.drawLine({startEnd: [0, canvasVerticalMidpoint, this.gl.canvas.width, canvasVerticalMidpoint], thickness, color: [0, 0, 1, alpha]})
-    const canvasHorizontalMidpoint = this.gl.canvas.width / 2
-    this.renderer.drawLine({startEnd: [canvasHorizontalMidpoint, 0, canvasHorizontalMidpoint, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
-    let str = 'Hello, Below Text j'
-    let textWidth = this.defaultFont!.getTextWidth(str, scale)
-    let x = canvasHorizontalMidpoint - textWidth 
+  drawOffsetText(): void {
+  const thickness = 1
+  const alpha = 1.0
+  const scale = 1.0
 
-    this.renderer.drawLine({startEnd: [x, 0, x, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
-    color = [0, 1, 0, 1]
-    this.renderer.drawTextBelow({
-      font: this.mtsdfFont!,
-      xy: [x, canvasVerticalMidpoint], // Starting position of the text
-      str, // The string to render
-      scale, // Scale factor
-      color, // Text color (orange)
-      rotation: 0, //Math.PI / 6, // Rotation angle in radians (30 degrees)
-      // isOutline: true, // Outline thickness
-    })
-    str = 'Hello, Above Text j'
-    textWidth = this.defaultFont!.getTextWidth(str, scale)
-    x = canvasHorizontalMidpoint + textWidth
-    color = [1, 0, 0, 1] 
-    this.renderer.drawLine({startEnd: [x, 0, x, this.canvas.height], thickness, color: [0, 0, 1, alpha]})
-    this.renderer.drawTextAbove({
-      font: this.mtsdfFont!,
-      xy: [canvasHorizontalMidpoint + textWidth, canvasVerticalMidpoint], // Starting position of the text
-      str, // The string to render
-      scale, // Scale factor
-      color, // Text color (orange)
-      rotation: 0, 
-      isOutline: true, // Outline thickness
-    })
+  const canvasVerticalMidpoint = this.gl.canvas.height / 2
+  // Horizontal center line
+  this.renderer.drawLine({
+    startEnd: [0, canvasVerticalMidpoint, this.gl.canvas.width, canvasVerticalMidpoint],
+    thickness,
+    color: [0, 0, 1, alpha]
+  })
 
-    color = [1, 0, 1, 1]
-    this.renderer.drawRotatedText({
-      font: this.defaultFont!,
-      xy: [canvasHorizontalMidpoint, canvasVerticalMidpoint],
-      str: 'This is a long string that will wrap if it exceeds the max width.',
-      scale: scale * 0.75,
-      color,
-      // outlineColor: [0.25, 0.25, 1, 1],
-      // rotation: -Math.PI / 2, // 30-degree rotation
-      maxWidth: 300, // Wrap to fit within 300px
-      isOutline: true,
-      alignment: HorizontalAlignment.CENTER
-    })
+  const canvasHorizontalMidpoint = this.gl.canvas.width / 2
+  // Vertical center line
+  this.renderer.drawLine({
+    startEnd: [canvasHorizontalMidpoint, 0, canvasHorizontalMidpoint, this.canvas.height],
+    thickness,
+    color: [0, 0, 1, alpha]
+  })
 
-    str = 'Hello, Left of Text j'
-    let textHeight = this.defaultFont!.getTextHeight(str, scale)
-    let y = canvasVerticalMidpoint - textHeight 
-    this.renderer.drawLine({startEnd: [0, y, this.canvas.width, y], thickness, color: [1, 0, 0, alpha]})
-    color = [0, 0, 0, 1]
-    this.renderer.drawTextLeftOf({
-      font: this.mtsdfFont!,
-      xy: [canvasHorizontalMidpoint, y], // Starting position of the text
-      str, // The string to render
-      scale, // Scale factor
-      color, // Text color (orange)
-      rotation: 0, 
-      // isOutline: true, // Outline thickness
-      // alignment: HorizontalAlignment.LEFT
-    })
+  // Below
+  let str = 'Hello, Below Text j'
+  let textWidth = this.defaultFont!.getTextWidth(str, scale)
+  let x = canvasHorizontalMidpoint - textWidth
+  // Vertical text boundary
+  this.renderer.drawLine({
+    startEnd: [x, 0, x, this.canvas.height],
+    thickness,
+    color: [0, 0, 1, alpha]
+  })
+  let color: Color = [0, 1, 0, 1]
+  this.renderer.drawTextBelow({
+    font: this.defaultFont!,
+    xy: [x, canvasVerticalMidpoint],
+    str,
+    scale,
+    color,
+    rotation: 0
+  })
 
-    str = 'Hello, Right of Text j'
-    textHeight = this.defaultFont!.getTextHeight(str, scale)
-    // y = canvasVerticalMidpoint - textHeight 
-    color = [1, 1, 0, 1]
-    this.renderer.drawTextRightOf({
-      font: this.mtsdfFont!,
-      xy: [canvasHorizontalMidpoint, y], // Starting position of the text
-      str, // The string to render
-      scale, // Scale factor
-      color, // Text color (orange)
-      rotation: 0, 
-      isOutline: true, // Outline thickness
-      // alignment: HorizontalAlignment.RIGHT
-    })
+  // Above
+  str = 'Hello, Above Text j'
+  textWidth = this.defaultFont!.getTextWidth(str, scale)
+  x = canvasHorizontalMidpoint + textWidth
+  this.renderer.drawLine({
+    startEnd: [x, 0, x, this.canvas.height],
+    thickness,
+    color: [0, 0, 1, alpha]
+  })
+  color = [1, 0, 0, 1]
+  this.renderer.drawTextAbove({
+    font: this.defaultFont!,
+    xy: [x, canvasVerticalMidpoint],
+    str,
+    scale,
+    color,
+    rotation: 0,
+    isOutline: true
+  })
 
+  // Centered, rotated wrapped text
+  color = [1, 0, 1, 1]
+  this.renderer.drawRotatedText({
+    font: this.defaultFont!,
+    xy: [canvasHorizontalMidpoint, canvasVerticalMidpoint],
+    str: 'This is a long string that will wrap if it exceeds the max width.',
+    scale: scale * 0.75,
+    color,
+    maxWidth: 300,
+    isOutline: true,
+    alignment: HorizontalAlignment.CENTER
+  })
+
+  // Left of
+  str = 'Hello, Left of Text j'
+  let textHeight = this.defaultFont!.getTextHeight(str, scale)
+  let y = canvasVerticalMidpoint - textHeight
+  this.renderer.drawLine({
+    startEnd: [0, y, this.canvas.width, y],
+    thickness,
+    color: [1, 0, 0, alpha]
+  })
+  color = [0, 0, 0, 1]
+  this.renderer.drawTextLeftOf({
+    font: this.defaultFont!,
+    xy: [canvasHorizontalMidpoint, y],
+    str,
+    scale,
+    color,
+    rotation: 0
+  })
+
+  // Right of
+  str = 'Hello, Right of Text j'
+  textHeight = this.defaultFont!.getTextHeight(str, scale)
+  y = canvasVerticalMidpoint - textHeight
+  color = [1, 1, 0, 1]
+  this.renderer.drawTextRightOf({
+    font: this.defaultFont!,
+    xy: [canvasHorizontalMidpoint, y],
+    str,
+    scale,
+    color,
+    rotation: 0,
+    isOutline: true
+  })
+}
+
+
+  // draw() {
+  //   this.clear([0.75, 0.75, 0.75, 1.0])
+  //   // this.drawWordWrappedText()
+  //   // this.drawDifferentSizedText()
+  //   this.drawOffsetText()
+  //   // const str = 'M' //'Hello, MTSDF'
+  //   // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
+  //   //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
+  //   //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
+  //   // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
     
-  }
 
-  draw() {
-    this.clear([0.75, 0.75, 0.75, 1.0])
-    // this.drawWordWrappedText()
-    // this.drawDifferentSizedText()
-    // this.drawOffsetText()
-    // const str = 'M' //'Hello, MTSDF'
-    // let color = [0.3, 0.75, 0.75, 1.0] // [0, 0, 0, 1]//
-    //this.renderer.drawMTSDFText({font: this.mtsdfFont!, xy: [400, 100], str, scale: 0.5, color })
-    //drawMTSDFText(font: UIKFont, xy: number[], str: string, scale = 1, color: Float32List | null = null): void {
-    // this.renderer.drawMTSDFText(this.mtsdfFont!, [400, 100], str, 1, color )
-    
-
-    // , style: LineStyle.DASHED, dashDotLength: 5
+  //   // , style: LineStyle.DASHED, dashDotLength: 5
     
     
-    // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
-    this.drawComponents()
-  }
+  //   // this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [1, 0, 0, 1]})
+  //   // this.drawComponents()
+  // }
 
   drawComponents() {
     this.renderer.drawTextBox({font: this.defaultFont!, xy:[500, 300], text: 'Hello, world!', textColor: [0, 0, 0, 1], outlineColor: [1, 1, 1, 1], fontOutlineColor: [1, 1, 1, 1], roundness: 1.0, fillColor: [0, 0.5, 0.7, 1]})
@@ -647,133 +670,150 @@ export class CoreRenderer {
 //   /**
 //  * Main draw method that demonstrates rendering shapes, rotated text, and a ruler.
 //  */
-// async draw(): Promise<void> {
-//     if (!this.defaultFont!.isFontLoaded) {
-//       return
-//     }
+async draw(): Promise<void> {
+    if (!this.defaultFont!.isFontLoaded) {
+      return
+    }
+    console.log('draw called')
+    // Clear the canvas with a black background
+    this.clear([0.5, 0.5, 0.5, 1])
+    // this.renderCuboid()
+    // Draw a triangle
+    // this.renderer.drawTriangle({
+    //   headPoint: [100, 600],
+    //   baseMidPoint: [100, 800],
+    //   baseLength: 200,
+    //   color: [1, 0, 0, 1] // Red triangle
+    // })
   
-//     // Clear the canvas with a black background
-//     this.clear([0.5, 0.5, 0.5, 1])
-//     this.renderCuboid()
-//     // Draw a triangle
-//     // this.renderer.drawTriangle({
-//     //   headPoint: [100, 600],
-//     //   baseMidPoint: [100, 800],
-//     //   baseLength: 200,
-//     //   color: [1, 0, 0, 1] // Red triangle
-//     // })
+    // // Draw a circle
+    // this.renderer.drawCircle({
+    //   leftTopWidthHeight: [250, 700, 150, 150],
+    //   circleColor: [0, 0, 1, 1], // Blue circle
+    //   fillPercent: 1.0
+    // })
   
-//     // // Draw a circle
-//     // this.renderer.drawCircle({
-//     //   leftTopWidthHeight: [250, 700, 150, 150],
-//     //   circleColor: [0, 0, 1, 1], // Blue circle
-//     //   fillPercent: 1.0
-//     // })
+    // // Draw a line
+    // this.renderer.drawLine({
+    //   startEnd: [200, 800, 600, 610],
+    //   thickness: 5,
+    //   color: [0, 1, 0, 1], // Green line
+    //   style: LineStyle.SOLID,
+    //   terminator: LineTerminator.ARROW
+    // })
   
-//     // // Draw a line
-//     // this.renderer.drawLine({
-//     //   startEnd: [200, 800, 600, 610],
-//     //   thickness: 5,
-//     //   color: [0, 1, 0, 1], // Green line
-//     //   style: LineStyle.SOLID,
-//     //   terminator: LineTerminator.ARROW
-//     // })
+    // // Draw another triangle
+    // this.renderer.drawTriangle({
+    //   headPoint: [500, 600],
+    //   baseMidPoint: [500, 800],
+    //   baseLength: 200,
+    //   color: [1, 1, 0, 1] // Yellow triangle
+    // })
   
-//     // // Draw another triangle
-//     // this.renderer.drawTriangle({
-//     //   headPoint: [500, 600],
-//     //   baseMidPoint: [500, 800],
-//     //   baseLength: 200,
-//     //   color: [1, 1, 0, 1] // Yellow triangle
-//     // })
+    // 3) draw a plain text string at a known position
+    this.renderer.drawText({
+      font:     this.defaultFont!,
+      position: [100, 100],
+      text:     'Hello, World!',
+      scale:    1.0,
+      color:    [1, 1, 1, 1]
+    })
+    // // // Draw rotated text
+    console.log('default font', this.defaultFont)
+    this.renderer.drawRotatedText({
+      font: this.defaultFont!,
+      xy: [100, 300], // Starting position of the text
+      str: 'Hello, MedView!', // The string to render
+      scale: 0.50, // Scale factor
+      color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
+      rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
+      outlineColor: [0, 0, 0, 1], // Outline color (black)
+    })
   
-//     // // // Draw rotated text
-//     // this.renderer.drawRotatedText({
-//     //   font: this.defaultFont!,
-//     //   xy: [100, 300], // Starting position of the text
-//     //   str: 'Hello, MedView!', // The string to render
-//     //   scale: 0.50, // Scale factor
-//     //   color: [0.3, 0.75, 0.75, 1.0], // Text color (orange)
-//     //   rotation: Math.PI / 6, // Rotation angle in radians (30 degrees)
-//     //   outlineColor: [0, 0, 0, 1], // Outline color (black)
-//     //   outlineThickness: 2 // Outline thickness
-//     // })
-  
-//     // // Draw a ruler
-//     // this.renderer.drawRuler({
-//     //   pointA: [300, 500], // Starting point of the ruler
-//     //   pointB: [600, 500], // Ending point of the ruler
-//     //   length: 30.5, // Length value to display
-//     //   units: 'cm', // Units to display
-//     //   font: this.defaultFont!, // Font for text
-//     //   textColor: [1, 0, 0, 1], // Red text
-//     //   lineColor: [0, 0, 0, 1], // Black ruler lines
-//     //   lineThickness: 2, // Thickness of the lines
-//     //   offset: 50, // Offset distance for parallel line and text
-//     //   scale: 1.0, // Scale factor for text
-//     //   showTickmarkNumbers: true // Show tickmark numbers
-//     // })
+    // // Draw a ruler
+    // this.renderer.drawRuler({
+    //   pointA: [300, 500], // Starting point of the ruler
+    //   pointB: [600, 500], // Ending point of the ruler
+    //   length: 30.5, // Length value to display
+    //   units: 'cm', // Units to display
+    //   font: this.defaultFont!, // Font for text
+    //   textColor: [1, 0, 0, 1], // Red text
+    //   lineColor: [0, 0, 0, 1], // Black ruler lines
+    //   lineThickness: 2, // Thickness of the lines
+    //   offset: 50, // Offset distance for parallel line and text
+    //   scale: 1.0, // Scale factor for text
+    //   showTickmarkNumbers: true // Show tickmark numbers
+    // })
 
-//     // this.renderer.drawRotatedText({
-//     //   font: this.defaultFont!,
-//     //   xy: [500, 200],
-//     //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
-//     //   scale: 0.5,
-//     //   color: [1, 1, 1, 1],
-//     //   outlineColor: [0.25, 0.25, 1, 1],
-//     //   rotation: Math.PI / 6, // 30-degree rotation
-//     //   maxWidth: 300 // Wrap to fit within 300px
-//     // })
+    // this.renderer.drawRotatedText({
+    //   font: this.defaultFont!,
+    //   xy: [500, 200],
+    //   str: 'This is a long string that will wrap if it exceeds the maxWidth.',
+    //   scale: 0.5,
+    //   color: [1, 1, 1, 1],
+    //   outlineColor: [0.25, 0.25, 1, 1],
+    //   rotation: Math.PI / 6, // 30-degree rotation
+    //   maxWidth: 300 // Wrap to fit within 300px
+    // })
 
-//     // // if(this.hebrewFont) {
-//     // // this.renderer.drawRotatedText({
-//     // //   font: this.hebrewFont,
-//     // //   xy: [800, 500],
-//     // //   str: 'שָׁלוֹם עֲלֵיכֶם',
-//     // //   scale: 0.5,
-//     // //   color: [1, 1, 1, 1],
-//     // //   outlineColor: [0.25, 0.25, 1, 1],
-//     // //   rotation: 0,//Math.PI / 6, // 30-degree rotation
-//     // //   maxWidth: 300 // Wrap to fit within 300px
-//     // // })
-//     // // }
-//     // // const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
-//     // // this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
+    // // if(this.hebrewFont) {
+    // // this.renderer.drawRotatedText({
+    // //   font: this.hebrewFont,
+    // //   xy: [800, 500],
+    // //   str: 'שָׁלוֹם עֲלֵיכֶם',
+    // //   scale: 0.5,
+    // //   color: [1, 1, 1, 1],
+    // //   outlineColor: [0.25, 0.25, 1, 1],
+    // //   rotation: 0,//Math.PI / 6, // 30-degree rotation
+    // //   maxWidth: 300 // Wrap to fit within 300px
+    // // })
+    // // }
+    // // const gradientTexture = this.colorTables.generateColorMapTexture(this.gl, this.colorMap)
+    // // this.renderer.drawColorbar({position: [200, 500], size: [400, 50], gradientTexture})
 
-//     // this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
-//     // this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
-//     // this.renderer.drawToggle({position: [800, 500], size: [100, 50], isOn: true, onColor: [0, 1, 0, 1], offColor: [0.5, 0.5, 0.5, 1]})    
-//     // this.renderer.drawSlider({
-//     //   position: [800, 700],
-//     //   size: [300, 40], // Slider size
-//     //   value: 50, // Current slider value
-//     //   min: 0,
-//     //   max: 100,
-//     //   trackColor: [0.8, 0.8, 0.8, 1.0], // Light gray
-//     //   fillColor: [0.0, 0.5, 1.0, 1.0], // Blue
-//     //   knobColor: [1.0, 1.0, 1.0, 1.0], // White
-//     //   shadowColor: [0.0, 0.0, 0.0, 0.3], // Light black shadow
-//     //   shadowOffset: [0.03, -0.03], // Slight shadow offset
-//     //   shadowBlur: 0.1, // Smooth shadow blur
-//     //   valueTextColor: [0.0, 0.5, 1.0, 1.0], // Blue text
-//     //   font: this.defaultFont!, // Default font for rendering the slider value
-//     //   scale: 0.5 // Default scale
-//     // })
+    this.renderer.drawSVG({svgAsset: this.paperClip!, position: [200, 500], scale: 0.2})
+    this.renderer.drawBitmap({bitmap: this.bitmap!, position: [500, 500], scale: 1.0})
+    // 3) Draw a toggle switch (no longer needs `renderer` in config)
+  this.renderer.drawToggle({    
+    position: [800, 500],
+    size: [100, 50],
+    isOn: true,
+    onColor: [0, 1, 0, 1],
+    offColor: [0.5, 0.5, 0.5, 1]
+  })
+
+  // 4) Draw a slider control (no longer needs `renderer` in config)
+  this.renderer.drawSlider({
+    position: [800, 700],
+    size: [300, 40],
+    value: 50,
+    min: 0,
+    max: 100,
+    trackColor: [0.8, 0.8, 0.8, 1.0],
+    fillColor: [0.0, 0.5, 1.0, 1.0],
+    knobColor: [1.0, 1.0, 1.0, 1.0],
+    shadowColor: [0.0, 0.0, 0.0, 0.3],
+    shadowOffset: [0.03, -0.03],
+    shadowBlur: 0.1,
+    valueTextColor: [0.0, 0.5, 1.0, 1.0],
+    font: this.defaultFont!,
+    scale: 0.5
+  })
     
     
     
-//   // this.renderer.drawLine({
-//   //   startEnd: [500, 500, 1000, 800],
-//   //   thickness: 5,
-//   //   color: [0, 1, 0, 1], // Green line
-//   //   style: LineStyle.SOLID,
-//   //   terminator: LineTerminator.ARROW
-//   // })
-//       // Increment rotation angle
-//       this.rotationAngle += 0.01     
-//       // Schedule the next frame
-//       // requestAnimationFrame(() => this.draw())
-//   }
+  // this.renderer.drawLine({
+  //   startEnd: [500, 500, 1000, 800],
+  //   thickness: 5,
+  //   color: [0, 1, 0, 1], // Green line
+  //   style: LineStyle.SOLID,
+  //   terminator: LineTerminator.ARROW
+  // })
+      // Increment rotation angle
+      this.rotationAngle += 0.01     
+      // Schedule the next frame
+      // requestAnimationFrame(() => this.draw())
+  }
   
 
   /**
